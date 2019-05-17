@@ -25,5 +25,5 @@ jobs:
 
 stages:
   - Test
-#  - name: build-and-deploy
-#    if: branch = master AND type = push
+  - name: build-and-deploy
+    if: branch = master AND type = push

@@ -3,34 +3,78 @@
 [![npm version](https://badge.fury.io/js/epsagon-frameworks.svg)](https://badge.fury.io/js/epsagon-frameworks)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
-This package provides an instrumentation to Node.js code running on functions for collection of distributed tracing and performance monitoring.
+This package provides an instrumentation to Node.js code running on frameworks for collection of distributed tracing and performance monitoring.
 
 ## Installation
 
 From your project directory:
 
 ```sh
-npm install --save epsagon
+npm install --save epsagon-frameworks
 ```
 
-## Getting started
 
-Simply use the wrapper to send traces from your code:
+## Express application
+
+If you're running express.js application on any non Lambda environment, you can still use Epsagon!
+Note: Only Express 4 and above is supported
+You can accomplish that with the following example:
 
 ```node
-const epsagon = require('epsagon');
+const express = require('express');
+const epsagon = require('epsagon-frameworks');
+
 epsagon.init({
     token: 'my-secret-token',
     appName: 'my-app-name',
-    metadataOnly: false, // Optional, send more trace data
+    metadataOnly: false,
 });
 
-function handler(event, context, callback) {
-    callback(null, 'It worked!')
-}
+const app = express()
 
-handler = epsagon.lambdaWrapper(handler)
+app.get('/', (req, res) => res.send('Hello World!'))
+
+app.listen(3000)
 ```
+
+## Hapi application
+
+If you're running Hapi.js application on any non Lambda environment, you can still use Epsagon!
+Note: Only Hapi 17 and above is supported
+You can accomplish that with the following example:
+
+```node
+const Hapi = require('hapi');
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+    token: 'my-secret-token',
+    appName: 'my-app-name',
+    metadataOnly: false,
+});
+
+const init = async () => {
+
+    const server = Hapi.server({
+        port: 3000,
+        host: 'localhost'
+    });
+
+    server.route({
+        method: 'GET',
+        path:'/',
+        handler: (request, h) => {
+            return 'Hello World!';
+        }
+    });
+
+    await server.start();
+    console.log('Server running on %ss', server.info.uri);
+};
+
+init();
+```
+
 
 ## Custom labels
 
@@ -64,67 +108,6 @@ function handler(event, context, callback) {
     epsagon.setError(Error('My custom error'));
     callback(null, 'It worked!')
 }
-```
-
-## Express application
-
-If you're running express.js application on any non Lambda environment, you can still use Epsagon!
-Note: Only Express 4 and above is supported
-You can accomplish that with the following example:
-
-```node
-const express = require('express');
-const epsagon = require('epsagon');
-
-epsagon.init({
-    token: 'my-secret-token',
-    appName: 'my-app-name',
-    metadataOnly: false,
-});
-
-const app = express()
-
-app.get('/', (req, res) => res.send('Hello World!'))
-
-app.listen(3000)
-```
-
-## Hapi application
-
-If you're running Hapi.js application on any non Lambda environment, you can still use Epsagon!
-Note: Only Hapi 17 and above is supported
-You can accomplish that with the following example:
-
-```node
-const Hapi = require('hapi');
-const epsagon = require('epsagon');
-
-epsagon.init({
-    token: 'my-secret-token',
-    appName: 'my-app-name',
-    metadataOnly: false,
-});
-
-const init = async () => {
-
-    const server = Hapi.server({
-        port: 3000,
-        host: 'localhost'
-    });
-
-    server.route({
-        method: 'GET',
-        path:'/',
-        handler: (request, h) => {
-            return 'Hello World!';
-        }
-    });
-
-    await server.start();
-    console.log('Server running on %ss', server.info.uri);
-};
-
-init();
 ```
 
 

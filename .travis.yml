@@ -1,0 +1,29 @@
+language: node_js
+
+branches:
+  only:
+    - master
+
+install:
+  - npm install
+  - npm install -g serverless
+
+node_js:
+  - "8.10"
+  - "10.15"
+
+script:
+  - npm run lint
+
+
+jobs:
+  include:
+    - stage: build-and-deploy
+      node_js: "8.10"
+      script:
+        - npm run build && npm run semantic-release
+
+stages:
+  - Test
+#  - name: build-and-deploy
+#    if: branch = master AND type = push

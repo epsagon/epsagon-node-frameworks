@@ -1,0 +1,81 @@
+{
+  "name": "epsagon-frameworks",
+  "version": "0.0.0-development",
+  "description": "Epsagon Instrumentation for Node.js Frameworks",
+  "keywords": [
+    "serverless",
+    "epsagon",
+    "tracing",
+    "distributed-tracing",
+    "lambda",
+    "aws-lambda",
+    "debugging",
+    "monitoring",
+    "express",
+    "hapi"
+  ],
+  "author": "Epsagon Team <support@epsagon.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "",
+    "lint:js": "eslint --max-warnings=0 ./src/ ./examples/ ./test/unit_tests ./index.js -f table --ext .js --ext .jsx",
+    "lint": "npm run lint:js",
+    "build:dev": "rollup -c",
+    "build": "NODE_ENV=production rollup -c",
+    "clean": "rm -r dist/",
+    "prepublishOnly": "npm run build",
+    "semantic-release": "semantic-release"
+  },
+  "bugs": {
+    "url": "https://github.com/epsagon/epsagon-node-frameworks/issues"
+  },
+  "homepage": "https://github.com/epsagon/epsagon-node-frameworks#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/epsagon/epsagon-node-frameworks.git"
+  },
+  "main": "dist/bundle.js",
+  "files": [
+    "dist"
+  ],
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^7.1.2",
+    "@commitlint/config-angular": "^7.1.2",
+    "@commitlint/config-conventional": "^7.1.2",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^4.18.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-json": "^1.2.1",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-mocha": "^4.11.0",
+    "eslint-plugin-react": "^7.11.0",
+    "express": "^4.16.4",
+    "hapi": "^18.1.0",
+    "husky": "^1.1.0",
+    "lolex": "^3.0.0",
+    "mocha": "^5.0.4",
+    "proxyquire": "^2.0.1",
+    "rollup": "^0.66.6",
+    "rollup-plugin-commonjs": "^9.1.8",
+    "rollup-plugin-eslint": "^5.0.0",
+    "rollup-plugin-json": "^3.1.0",
+    "rollup-plugin-terser": "^3.0.0",
+    "semantic-release": "^15.13.12",
+    "sinon": "^4.3.0",
+    "uglify-es": "^3.3.9"
+  },
+  "dependencies": {
+    "cls-hooked": "^4.2.2",
+    "epsagon": "^1.20.3",
+    "shimmer": "^1.2.0",
+    "uuid4": "^1.0.0"
+  }
+}

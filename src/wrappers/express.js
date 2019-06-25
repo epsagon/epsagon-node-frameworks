@@ -42,12 +42,12 @@ function expressMiddleware(req, res, next) {
     };
 
     next();
-    if (!req.route) {
-        return;
-    }
 
     // Handle response
-    res.on('finish', function handleResponse() {
+    res.once('finish', function handleResponse() {
+        if (!req.route) {
+            return;
+        }
         try {
             expressRunner.finishRunner(expressEvent, this, req, startTime);
         } catch (err) {

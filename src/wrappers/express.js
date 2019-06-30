@@ -11,7 +11,7 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const expressRunner = require('../runners/express.js');
-const { ignoredEndpoints } = require('../utils.js');
+const { ignoredEndpoints } = require('../http.js');
 
 const express = tryRequire('express');
 

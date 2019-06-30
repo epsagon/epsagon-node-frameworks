@@ -1,9 +1,9 @@
 const epsagon = require('epsagon');
-const utils = require('./utils.js');
+const http = require('./http.js');
 
 // Requiring patcher to instrument modules
 const patcher = require('./patcher.js'); // eslint-disable-line no-unused-vars
 
-epsagon.ignoreEndpoints = utils.ignoreEndpoints;
+epsagon.ignoreEndpoints = http.ignoreEndpoints;
 
 module.exports = epsagon;

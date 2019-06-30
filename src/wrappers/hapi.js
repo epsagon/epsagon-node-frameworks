@@ -12,7 +12,7 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const hapiRunner = require('../runners/hapi.js');
-const { ignoredEndpoints } = require('../utils.js');
+const { ignoredEndpoints } = require('../http.js');
 
 const Hapi = tryRequire('hapi');
 

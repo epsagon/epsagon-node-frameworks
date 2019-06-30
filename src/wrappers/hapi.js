@@ -12,6 +12,7 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const hapiRunner = require('../runners/hapi.js');
+const { ignoredEndpoints } = require('../http.js');
 
 const Hapi = tryRequire('hapi');
 
@@ -67,6 +68,12 @@ function hapiMiddleware(request, h, originalHandler) {
 
     // Run the request, activate the context
     const response = originalHandler(request, h);
+
+    // Check if endpoint is ignored
+    if (ignoredEndpoints().includes(request.route.path)) {
+        utils.debugLog(`Ignoring request: ${request.route.path}`);
+        return response;
+    }
 
     // Handle response
     response.then(() => {

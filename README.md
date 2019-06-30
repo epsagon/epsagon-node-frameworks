@@ -111,6 +111,14 @@ function handler(event, context, callback) {
 ```
 
 
+## Ignoring endpoints
+
+You can ignore certain requests by specifying endpoints:
+```node
+epsagon.ignoreEndpoints(['/healthcheck'])
+```
+
+
 ## Copyright
 
 Provided under the MIT license. See LICENSE for details.

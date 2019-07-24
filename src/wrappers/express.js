@@ -10,6 +10,7 @@ const {
     tryRequire,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
+const traceSender = require('../trace_sender.js');
 const expressRunner = require('../runners/express.js');
 const { ignoredEndpoints } = require('../http.js');
 
@@ -59,7 +60,9 @@ function expressMiddleware(req, res, next) {
         } catch (err) {
             tracer.addException(err);
         }
-        tracer.sendTrace(() => {});
+        traceSender.addTrace(tracer.buildTraceJson());
+        delete tracer.trace;
+        delete traceContext.get();
     });
 }
 
@@ -71,6 +74,7 @@ function expressMiddleware(req, res, next) {
  */
 function expressWrapper(wrappedFunction) {
     traceContext.init();
+    traceSender.init();
     tracer.getTrace = traceContext.get;
     return function internalExpressWrapper() {
         const result = wrappedFunction.apply(this, arguments);

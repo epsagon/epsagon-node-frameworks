@@ -22,45 +22,45 @@ const express = tryRequire('express');
  * @param {Function} next express function
  */
 function expressMiddleware(req, res, next) {
+    // Check if endpoint is ignored
+    if (ignoredEndpoints().includes(req.originalUrl)) {
+        utils.debugLog(`Ignoring request: ${req.originalUrl}`);
+        next();
+        return;
+    }
+
     tracer.restart();
     let expressEvent;
     const startTime = Date.now();
     try {
         expressEvent = expressRunner.createRunner(req, startTime);
-        tracer.addRunner(expressEvent);
+        // Handle response
+        const requestPromise = new Promise((resolve) => {
+            res.once('finish', function handleResponse() {
+                if (!req.route) {
+                    return;
+                }
+                try {
+                    expressRunner.finishRunner(expressEvent, this, req, startTime);
+                } catch (err) {
+                    tracer.addException(err);
+                }
+                tracer.sendTrace(() => {}).then(resolve);
+            });
+        });
+        tracer.addRunner(expressEvent, requestPromise);
+
+        // Inject trace functions
+        const { label, setError } = tracer;
+        req.epsagon = {
+            label,
+            setError,
+        };
     } catch (err) {
         utils.debugLog(err);
+    } finally {
         next();
-        return;
     }
-
-    // Inject trace functions
-    const { label, setError } = tracer;
-    req.epsagon = {
-        label,
-        setError,
-    };
-
-    next();
-
-    // Check if endpoint is ignored
-    if (ignoredEndpoints().includes(req.originalUrl)) {
-        utils.debugLog(`Ignoring request: ${req.originalUrl}`);
-        return;
-    }
-
-    // Handle response
-    res.once('finish', function handleResponse() {
-        if (!req.route) {
-            return;
-        }
-        try {
-            expressRunner.finishRunner(expressEvent, this, req, startTime);
-        } catch (err) {
-            tracer.addException(err);
-        }
-        tracer.sendTrace(() => {});
-    });
 }
 
 

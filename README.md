@@ -75,6 +75,33 @@ const init = async () => {
 init();
 ```
 
+## Koa application
+
+If you're running Koa.js application on any non Lambda environment, you can still use Epsagon!
+You can accomplish that with the following example:
+
+```node
+const Koa = require('koa');
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+    token: 'my-secret-token',
+    appName: 'my-app-name',
+    metadataOnly: false,
+});
+
+const app = new Koa();
+
+app.use(async ctx => {
+  ctx.body = 'Hello World';
+
+  // Example label usage
+  ctx.epsagon.label('myFirstLabel', 'customValue1');
+});
+
+app.listen(3000)
+```
+
 
 ## Custom labels
 

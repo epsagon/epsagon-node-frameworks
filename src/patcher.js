@@ -6,6 +6,7 @@ const { config, utils } = require('epsagon');
 const hapiPatcher = require('./wrappers/hapi.js');
 const expressPatcher = require('./wrappers/express.js');
 const koaPatcher = require('./wrappers/koa.js');
+const pubusbPatcher = require('./wrappers/pubsub.js');
 
 
 /**
@@ -28,5 +29,6 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
         expressPatcher,
         hapiPatcher,
         koaPatcher,
+        pubusbPatcher,
     ].forEach(patch);
 }

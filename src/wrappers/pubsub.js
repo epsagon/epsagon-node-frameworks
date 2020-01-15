@@ -1,4 +1,3 @@
-/* eslint-disable prefer-rest-params */
 /**
  * @fileoverview Handlers for Pubsub instrumentation
  */
@@ -7,16 +6,9 @@ const shimmer = require('shimmer');
 const {
     tracer,
     tryRequire,
+    eventInterface,
 } = require('epsagon');
-const { initializeEvent, finalizeEvent } = require('../runners/runner');
 const traceContext = require('../trace_context.js');
-
-const GOOGLE_CLOUD_TYPES = {
-    defaultProjectId: '{{projectId}}',
-    pubsub: {
-        name: 'pubsub',
-    },
-};
 
 const subscriber = tryRequire('@google-cloud/pubsub/build/src/subscriber');
 
@@ -27,44 +19,66 @@ const subscriber = tryRequire('@google-cloud/pubsub/build/src/subscriber');
  * @param {*} requestFunctionThis request arguments.
  */
 function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThis) {
+    let originalHandlerErr;
+    const isFunctionAsync = originalHandler.constructor.name === 'AsyncFunction';
     try {
+        // initial tracer and evnets.
         tracer.restart();
         const functionName = originalHandler.name || 'messageHandler';
-        const { event: pubSubEvent, startTime: pubSubStartTime } = initializeEvent(
-            GOOGLE_CLOUD_TYPES.pubsub.name,
-            // eslint-disable-next-line no-underscore-dangle
-            requestFunctionThis._subscription.projectId,
+        const { slsEvent: pubSubEvent, startTime: pubSubStartTime } =
+        eventInterface.initializeEvent(
+            'pubsub',
+            requestFunctionThis.projectId,
             'messagePullingListener',
             'trigger'
         );
-        const { event: nodeEvent, startTime: nodeStartTime } = initializeEvent(
+        const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', functionName, 'messageReceived', 'runner'
         );
         tracer.addEvent(pubSubEvent);
-        const messageData = JSON.parse(`${message.data}`);
-        const callbackResponse = { messageId: message.id, ...messageData };
-        finalizeEvent(pubSubEvent, pubSubStartTime, null, callbackResponse);
+
+        // getting message data.
+        let callbackResponse = { messageId: message.id };
+        const messageData = (message.data && JSON.parse(`${message.data}`));
+        if (messageData && typeof messageData === 'object') {
+            callbackResponse = Object.assign(callbackResponse, messageData);
+        }
         const { label, setError } = tracer;
-        let originalHandlerErr;
-        tracer.addRunner(nodeEvent);
+        const returnMessage = message;
+        returnMessage.epsagon = {
+            label,
+            setError,
+        };
+
+        // finailize pubsub event.
+        eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, callbackResponse);
+        let promise;
         try {
-            const returnMessage = message;
-            returnMessage.epsagon = {
-                label,
-                setError,
-            };
-            originalHandler(returnMessage, {});
-            finalizeEvent(nodeEvent, nodeStartTime, null, callbackResponse);
+            promise = originalHandler(returnMessage, {});
         } catch (err) {
-            finalizeEvent(nodeEvent, nodeStartTime, err);
             originalHandlerErr = err;
         }
-        tracer.sendTrace(() => {});
-        if (originalHandlerErr) {
-            throw originalHandlerErr;
+        // handle async handler.
+        if (promise && promise.then) {
+            promise.catch((err) => {
+                originalHandlerErr = err;
+                throw err;
+            }).finally(() => {
+                eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerErr);
+                tracer.sendTrace(() => {});
+            });
+        } else {
+            // finish sync handler.
+            eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerErr);
+            tracer.sendTrace(() => {});
         }
+        tracer.addRunner(nodeEvent, promise);
     } catch (err) {
         tracer.addException(err);
+    }
+    // throwing error in case of originalHandler is sync.
+    if (originalHandlerErr) {
+        throw originalHandlerErr;
     }
 }
 
@@ -94,8 +108,9 @@ module.exports = {
      * Initializes the pubsub tracer
      */
     init() {
+        const subscription = tryRequire('@google-cloud/pubsub/build/src/subscription');
         if (subscriber) {
-            shimmer.wrap(subscriber.Subscriber.prototype, 'on', pubSubSubscriberWrapper);
+            shimmer.wrap(subscription.Subscription.prototype, 'on', pubSubSubscriberWrapper);
         }
     },
 };

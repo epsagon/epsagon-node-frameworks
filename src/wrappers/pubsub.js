@@ -20,9 +20,8 @@ const subscriber = tryRequire('@google-cloud/pubsub/build/src/subscriber');
  */
 function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThis) {
     let originalHandlerErr;
-    const isFunctionAsync = originalHandler.constructor.name === 'AsyncFunction';
     try {
-        // initial tracer and evnets.
+        // Initialize tracer and evnets.
         tracer.restart();
         const functionName = originalHandler.name || 'messageHandler';
         const { slsEvent: pubSubEvent, startTime: pubSubStartTime } =
@@ -37,7 +36,7 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
         );
         tracer.addEvent(pubSubEvent);
 
-        // getting message data.
+        // Getting message data.
         let callbackResponse = { messageId: message.id };
         const messageData = (message.data && JSON.parse(`${message.data}`));
         if (messageData && typeof messageData === 'object') {
@@ -50,7 +49,7 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
             setError,
         };
 
-        // finailize pubsub event.
+        // Finalize pubsub event.
         eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, callbackResponse);
         let promise;
         try {
@@ -58,7 +57,7 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
         } catch (err) {
             originalHandlerErr = err;
         }
-        // handle async handler.
+        // Handle and finalize async user function.
         if (promise && promise.then) {
             promise.catch((err) => {
                 originalHandlerErr = err;
@@ -68,7 +67,7 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
                 tracer.sendTrace(() => {});
             });
         } else {
-            // finish sync handler.
+            // Finalize sync user function.
             eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerErr);
             tracer.sendTrace(() => {});
         }
@@ -76,7 +75,7 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
     } catch (err) {
         tracer.addException(err);
     }
-    // throwing error in case of originalHandler is sync.
+    // Throwing error in case of sync user function.
     if (originalHandlerErr) {
         throw originalHandlerErr;
     }

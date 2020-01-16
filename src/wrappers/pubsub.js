@@ -7,6 +7,7 @@ const {
     tracer,
     tryRequire,
     eventInterface,
+    utils,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 
@@ -19,11 +20,10 @@ const subscriber = tryRequire('@google-cloud/pubsub/build/src/subscriber');
  * @param {*} requestFunctionThis request arguments.
  */
 function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThis) {
-    let originalHandlerErr;
+    let originalHandlerSyncErr;
     try {
         // Initialize tracer and evnets.
         tracer.restart();
-        const functionName = originalHandler.name || 'messageHandler';
         const { slsEvent: pubSubEvent, startTime: pubSubStartTime } =
         eventInterface.initializeEvent(
             'pubsub',
@@ -31,44 +31,47 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
             'messagePullingListener',
             'trigger'
         );
-        const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
-            'node_function', functionName, 'messageReceived', 'runner'
-        );
         tracer.addEvent(pubSubEvent);
 
         // Getting message data.
-        let callbackResponse = { messageId: message.id };
+        let runnerMetadata = { messageId: message.id };
         const messageData = (message.data && JSON.parse(`${message.data}`));
         if (messageData && typeof messageData === 'object') {
-            callbackResponse = Object.assign(callbackResponse, messageData);
+            runnerMetadata = Object.assign(runnerMetadata, messageData);
         }
         const { label, setError } = tracer;
-        const returnMessage = message;
-        returnMessage.epsagon = {
+        // eslint-disable-next-line no-param-reassign
+        message.epsagon = {
             label,
             setError,
         };
 
         // Finalize pubsub event.
-        eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, callbackResponse);
+        eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, runnerMetadata);
         let promise;
         try {
-            promise = originalHandler(returnMessage, {});
+            promise = originalHandler(message, {});
         } catch (err) {
-            originalHandlerErr = err;
+            originalHandlerSyncErr = err;
         }
+
+        const functionName = originalHandler.name || 'messageHandler';
+        const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
+            'node_function', functionName, 'messageReceived', 'runner'
+        );
         // Handle and finalize async user function.
-        if (promise && promise.then) {
+        if (utils.isPromise(promise)) {
+            let originalHandlerAsyncError;
             promise.catch((err) => {
-                originalHandlerErr = err;
+                originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {
-                eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerErr);
+                eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
                 tracer.sendTrace(() => {});
             });
         } else {
             // Finalize sync user function.
-            eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerErr);
+            eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
             tracer.sendTrace(() => {});
         }
         tracer.addRunner(nodeEvent, promise);
@@ -76,8 +79,8 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
         tracer.addException(err);
     }
     // Throwing error in case of sync user function.
-    if (originalHandlerErr) {
-        throw originalHandlerErr;
+    if (originalHandlerSyncErr) {
+        throw originalHandlerSyncErr;
     }
 }
 

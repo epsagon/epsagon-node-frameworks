@@ -34,35 +34,36 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
         tracer.addEvent(pubSubEvent);
 
         // Getting message data.
-        let runnerMetadata = { messageId: message.id };
+        let triggerMetadata = { messageId: message.id };
         const messageData = (message.data && JSON.parse(`${message.data}`));
         if (messageData && typeof messageData === 'object') {
-            runnerMetadata = Object.assign(runnerMetadata, messageData);
+            triggerMetadata = Object.assign(triggerMetadata, messageData);
         }
+        eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, triggerMetadata);
+
         const { label, setError } = tracer;
         // eslint-disable-next-line no-param-reassign
         message.epsagon = {
             label,
             setError,
         };
-
-        // Finalize pubsub event.
-        eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, runnerMetadata);
-        let promise;
+        const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
+            'node_function', 'messageHandler', 'messageReceived', 'runner'
+        );
+        let runnerResult;
         try {
-            promise = originalHandler(message, {});
+            runnerResult = originalHandler(message, {});
         } catch (err) {
             originalHandlerSyncErr = err;
         }
-
-        const functionName = originalHandler.name || 'messageHandler';
-        const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
-            'node_function', functionName, 'messageReceived', 'runner'
-        );
+        const originalHandlerName = originalHandler.name;
+        if (originalHandlerName) {
+            nodeEvent.getResource().setName(originalHandlerName);
+        }
         // Handle and finalize async user function.
-        if (utils.isPromise(promise)) {
+        if (utils.isPromise(runnerResult)) {
             let originalHandlerAsyncError;
-            promise.catch((err) => {
+            runnerResult.catch((err) => {
                 originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {
@@ -74,7 +75,7 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
             eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
             tracer.sendTrace(() => {});
         }
-        tracer.addRunner(nodeEvent, promise);
+        tracer.addRunner(nodeEvent, runnerResult);
     } catch (err) {
         tracer.addException(err);
     }

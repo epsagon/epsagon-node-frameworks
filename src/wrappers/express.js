@@ -38,7 +38,7 @@ function expressMiddleware(req, res, next) {
         const requestPromise = new Promise((resolve) => {
             res.once('finish', function handleResponse() {
                 if (
-                    ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() === 'TRUE') &&
+                    ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
                     (!req.route)
                 ) {
                     return;

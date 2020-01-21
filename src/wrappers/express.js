@@ -37,9 +37,6 @@ function expressMiddleware(req, res, next) {
         // Handle response
         const requestPromise = new Promise((resolve) => {
             res.once('finish', function handleResponse() {
-                if (!req.route) {
-                    return;
-                }
                 try {
                     expressRunner.finishRunner(expressEvent, this, req, startTime);
                 } catch (err) {

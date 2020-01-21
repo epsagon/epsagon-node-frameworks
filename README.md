@@ -75,6 +75,12 @@ const init = async () => {
 init();
 ```
 
+You can allow tracing for non-route requests by setting the Allow No Routes environment variable
+```bash
+EPSAGON_ALLOW_NO_ROUTE=TRUE
+```
+
+
 ## Koa application
 
 If you're running Koa.js application on any non Lambda environment, you can still use Epsagon!

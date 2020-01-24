@@ -31,16 +31,10 @@ const getServerHostname = (currentServer) => {
 /**
  * Checking if subscribe subject is inbox listener id.
  *
- * @param {*} subject subsribe subject.
- * @returns {Boolean} true if is inbox listener id, else false.
+ * @param {String} subject subsribe subject.
+ * @returns {Boolean} true if subscribe subject is inbox listener id, else false.
  */
-const isNatsRequestCall = (subject) => {
-    let isInbox = false;
-    if (subject && typeof subject === 'string' && subject.startsWith(NATS_TYPES.inboxSignature)) {
-        isInbox = true;
-    }
-    return isInbox;
-};
+const isNatsRequestCall = subject => !!(subject && typeof subject === 'string' && subject.startsWith(NATS_TYPES.inboxSignature));
 
 const getSubscribeParams = (opts, callback) => {
     let opts_internal = opts;

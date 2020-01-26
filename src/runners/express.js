@@ -47,7 +47,7 @@ function createRunner(req, startTime) {
 function finishRunner(expressEvent, res, req, startTime) {
     eventInterface.addToMetadata(expressEvent, {
         url: `${req.protocol}://${req.hostname}${req.path}`,
-        route: req.route.path,
+        route: req.route ? req.route.path : req.path,
         query: req.query,
         status_code: res.statusCode,
     }, {

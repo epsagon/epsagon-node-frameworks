@@ -20,13 +20,11 @@ const NATS_TYPES = {
     inboxSignature: '_INBOX',
 };
 
-const getServerHostname = (currentServer) => {
-    let serverHostname = NATS_TYPES.serverDefaultHostname;
-    if (currentServer.url && currentServer.url.hostname) {
-        serverHostname = currentServer.url.hostname;
-    }
-    return serverHostname;
-};
+const getServerHostname = currentServer => (
+    (currentServer.url && currentServer.url.hostname) ?
+        currentServer.url.hostname :
+        NATS_TYPES.serverDefaultHostname
+);
 
 /**
  * Checking if subscribe subject is inbox listener id.
@@ -58,6 +56,7 @@ const getSubscribeParams = (opts, callback) => {
  * @param {Function} callback  callback function.
  * @param {String} serverHostname nats server host name.
  * @param {Boolean} isRequestCall true if this subscribe call came from nats Client.request.
+ * @returns {Object} callback result.
  */
 function natsSubscribeCallbackMiddleware(
     callback_msg,
@@ -69,6 +68,7 @@ function natsSubscribeCallbackMiddleware(
     isRequestCall
 ) {
     let originalHandlerSyncErr;
+    let runnerResult;
     try {
         // Initialize tracer and evnets.
         tracer.restart();
@@ -80,19 +80,25 @@ function natsSubscribeCallbackMiddleware(
             'trigger'
         );
         tracer.addEvent(natsEvent);
-
         // Getting message data.
         const triggerMetadata = {};
-        if (callback_msg) triggerMetadata.msg = callback_msg;
-        if (callback_reply) triggerMetadata.reply = callback_reply;
-        if (callback_subject) triggerMetadata.subject = callback_subject;
-        if (callback_sid) triggerMetadata.sid = callback_sid;
+        if (callback_msg) {
+            triggerMetadata.msg = callback_msg;
+        }
+        if (callback_reply) {
+            triggerMetadata.reply = callback_reply;
+        }
+        if (callback_subject) {
+            triggerMetadata.subject = callback_subject;
+        }
+        if (callback_sid) {
+            triggerMetadata.sid = callback_sid;
+        }
         // Finalize nats event.
         eventInterface.finalizeEvent(natsEvent, natsStartTime, null, triggerMetadata);
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'messageHandler', 'messageReceived', 'runner'
         );
-        let runnerResult;
         try {
             runnerResult = callback(callback_msg, callback_reply, callback_subject, callback_sid);
         } catch (err) {
@@ -105,7 +111,7 @@ function natsSubscribeCallbackMiddleware(
         // Handle and finalize async user function.
         if (utils.isPromise(runnerResult)) {
             let originalHandlerAsyncError;
-            runnerResult.catch((err) => {
+            runnerResult = runnerResult.catch((err) => {
                 originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {
@@ -125,6 +131,7 @@ function natsSubscribeCallbackMiddleware(
     if (originalHandlerSyncErr) {
         throw originalHandlerSyncErr;
     }
+    return runnerResult;
 }
 
 /**
@@ -134,8 +141,6 @@ function natsSubscribeCallbackMiddleware(
  * @return {Function} subscribe function rsoponse.
  */
 function natsSubscribeWrapper(wrappedFunction, serverHostname) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalNatsSubscribeWrapper(subject, opts, callback) {
         let clientRequest;
         const { opts_internal, callback_internal } = getSubscribeParams(opts, callback);
@@ -172,6 +177,8 @@ function natsSubscribeWrapper(wrappedFunction, serverHostname) {
  * @return {Function} nats connect function response.
  */
 function natsConnectWrapper(connectFunction) {
+    traceContext.init();
+    tracer.getTrace = traceContext.get;
     return function internalNatsConnectWrapper(url, opts) {
         const connectFunctionResponse = connectFunction(url, opts);
         if (connectFunctionResponse && connectFunctionResponse.constructor) {

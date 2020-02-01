@@ -8,6 +8,7 @@ const {
     event,
     errorCode,
 } = require('epsagon');
+const { extractEpsagonHeader } = require('../http.js');
 
 /**
  * Creates an Event representing the running Hapi (runner)
@@ -17,7 +18,7 @@ const {
  */
 function createRunner(req, startTime) {
     const hapiEvent = new event.Event([
-        `hapi-${uuid4()}`,
+        extractEpsagonHeader(req.headers) || `hapi-${uuid4()}`,
         utils.createTimestampFromTime(startTime),
         null,
         'runner',

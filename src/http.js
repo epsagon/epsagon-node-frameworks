@@ -19,5 +19,16 @@ function getIgnoredEndpoints() {
     return ignoredEndpoints;
 }
 
+
+/**
+ * Gets the Epsagon header if exists, otherwise undefined
+ * @param {Object} headers object
+ * @returns {String} Epsagon header value
+ */
+function extractEpsagonHeader(headers) {
+    return headers['epsagon-trace-id'];
+}
+
 module.exports.ignoreEndpoints = ignoreEndpoints;
 module.exports.ignoredEndpoints = getIgnoredEndpoints;
+module.exports.extractEpsagonHeader = extractEpsagonHeader;

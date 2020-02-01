@@ -8,6 +8,7 @@ const {
     event,
     errorCode,
 } = require('epsagon');
+const { extractEpsagonHeader } = require('../http.js');
 
 /**
  * Creates an Event representing the running Express (runner)
@@ -17,7 +18,7 @@ const {
  */
 function createRunner(req, startTime) {
     const expressEvent = new event.Event([
-        `express-${uuid4()}`,
+        extractEpsagonHeader(req.headers) || `express-${uuid4()}`,
         utils.createTimestampFromTime(startTime),
         null,
         'runner',

@@ -8,6 +8,7 @@ const {
     event,
     errorCode,
 } = require('epsagon');
+const { extractEpsagonHeader } = require('../http.js');
 
 /**
  * Creates an Event representing the running Koa (runner)
@@ -17,7 +18,7 @@ const {
  */
 function createRunner(req, startTime) {
     const koaEvent = new event.Event([
-        `koa-${uuid4()}`,
+        extractEpsagonHeader(req.headers) || `koa-${uuid4()}`,
         utils.createTimestampFromTime(startTime),
         null,
         'runner',

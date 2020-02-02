@@ -56,9 +56,9 @@ function finishRunner(koaEvent, res, req, startTime) {
     });
 
     if (extractEpsagonHeader(req.headers)) {
-        eventInterface.addToMetadata(expressEvent, {
+        eventInterface.addToMetadata(koaEvent, {
             http_trace_id: extractEpsagonHeader(req.headers),
-        })
+        });
     }
 
     if (res.status >= 500) {

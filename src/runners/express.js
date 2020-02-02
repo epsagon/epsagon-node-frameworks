@@ -60,7 +60,7 @@ function finishRunner(expressEvent, res, req, startTime) {
     if (extractEpsagonHeader(req.headers)) {
         eventInterface.addToMetadata(expressEvent, {
             http_trace_id: extractEpsagonHeader(req.headers),
-        })
+        });
     }
 
     if (res.statusCode >= 500) {

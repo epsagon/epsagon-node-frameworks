@@ -58,9 +58,9 @@ function finishRunner(hapiEvent, req, res, startTime) {
     });
 
     if (extractEpsagonHeader(req.headers)) {
-        eventInterface.addToMetadata(expressEvent, {
+        eventInterface.addToMetadata(hapiEvent, {
             http_trace_id: extractEpsagonHeader(req.headers),
-        })
+        });
     }
 
     if (res.statusCode >= 500) {

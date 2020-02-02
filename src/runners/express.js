@@ -18,7 +18,7 @@ const { extractEpsagonHeader } = require('../http.js');
  */
 function createRunner(req, startTime) {
     const expressEvent = new event.Event([
-        extractEpsagonHeader(req.headers) || `express-${uuid4()}`,
+        `express-${uuid4()}`,
         utils.createTimestampFromTime(startTime),
         null,
         'runner',
@@ -56,6 +56,12 @@ function finishRunner(expressEvent, res, req, startTime) {
         params: req.params,
         response_headers: res.getHeaders(),
     });
+
+    if (extractEpsagonHeader(req.headers)) {
+        eventInterface.addToMetadata(expressEvent, {
+            http_trace_id: extractEpsagonHeader(req.headers),
+        })
+    }
 
     if (res.statusCode >= 500) {
         expressEvent.setErrorCode(errorCode.ErrorCode.EXCEPTION);

@@ -18,7 +18,7 @@ const { extractEpsagonHeader } = require('../http.js');
  */
 function createRunner(req, startTime) {
     const koaEvent = new event.Event([
-        extractEpsagonHeader(req.headers) || `koa-${uuid4()}`,
+        `koa-${uuid4()}`,
         utils.createTimestampFromTime(startTime),
         null,
         'runner',
@@ -54,6 +54,12 @@ function finishRunner(koaEvent, res, req, startTime) {
         request_headers: req.headers,
         response_headers: res.headers,
     });
+
+    if (extractEpsagonHeader(req.headers)) {
+        eventInterface.addToMetadata(expressEvent, {
+            http_trace_id: extractEpsagonHeader(req.headers),
+        })
+    }
 
     if (res.status >= 500) {
         koaEvent.setErrorCode(errorCode.ErrorCode.EXCEPTION);

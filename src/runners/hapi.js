@@ -18,7 +18,7 @@ const { extractEpsagonHeader } = require('../http.js');
  */
 function createRunner(req, startTime) {
     const hapiEvent = new event.Event([
-        extractEpsagonHeader(req.headers) || `hapi-${uuid4()}`,
+        `hapi-${uuid4()}`,
         utils.createTimestampFromTime(startTime),
         null,
         'runner',
@@ -56,6 +56,12 @@ function finishRunner(hapiEvent, req, res, startTime) {
         params: req.params,
         response_headers: res.headers,
     });
+
+    if (extractEpsagonHeader(req.headers)) {
+        eventInterface.addToMetadata(expressEvent, {
+            http_trace_id: extractEpsagonHeader(req.headers),
+        })
+    }
 
     if (res.statusCode >= 500) {
         hapiEvent.setErrorCode(errorCode.ErrorCode.EXCEPTION);

@@ -8,6 +8,7 @@ const {
     event,
     errorCode,
 } = require('epsagon');
+const { extractEpsagonHeader } = require('../http.js');
 
 /**
  * Creates an Event representing the running Koa (runner)
@@ -53,6 +54,12 @@ function finishRunner(koaEvent, res, req, startTime) {
         request_headers: req.headers,
         response_headers: res.headers,
     });
+
+    if (extractEpsagonHeader(req.headers)) {
+        eventInterface.addToMetadata(koaEvent, {
+            http_trace_id: extractEpsagonHeader(req.headers),
+        });
+    }
 
     if (res.status >= 500) {
         koaEvent.setErrorCode(errorCode.ErrorCode.EXCEPTION);

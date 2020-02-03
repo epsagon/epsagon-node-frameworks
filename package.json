@@ -44,7 +44,7 @@
     }
   },
   "devDependencies": {
-    "@commitlint/cli": "^7.1.2",
+    "@commitlint/cli": "^8.3.5",
     "@commitlint/config-angular": "^7.1.2",
     "@commitlint/config-conventional": "^7.1.2",
     "chai": "^4.1.2",
@@ -69,13 +69,13 @@
     "rollup-plugin-commonjs": "^9.1.8",
     "rollup-plugin-eslint": "^5.0.0",
     "rollup-plugin-json": "^3.1.0",
-    "rollup-plugin-terser": "^3.0.0",
-    "semantic-release": "^15.13.12",
+    "rollup-plugin-terser": "^5.2.0",
+    "semantic-release": "^17.0.2",
     "sinon": "^4.3.0",
     "uglify-es": "^3.3.9"
   },
   "dependencies": {
-    "epsagon": "^1.48.0",
+    "epsagon": "^1.49.2",
     "semver": "^6.3.0",
     "shimmer": "^1.2.0",
     "uuid4": "^1.0.0"

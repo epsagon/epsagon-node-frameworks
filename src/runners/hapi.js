@@ -8,6 +8,7 @@ const {
     event,
     errorCode,
 } = require('epsagon');
+const { extractEpsagonHeader } = require('../http.js');
 
 /**
  * Creates an Event representing the running Hapi (runner)
@@ -55,6 +56,12 @@ function finishRunner(hapiEvent, req, res, startTime) {
         params: req.params,
         response_headers: res.headers,
     });
+
+    if (extractEpsagonHeader(req.headers)) {
+        eventInterface.addToMetadata(hapiEvent, {
+            http_trace_id: extractEpsagonHeader(req.headers),
+        });
+    }
 
     if (res.statusCode >= 500) {
         hapiEvent.setErrorCode(errorCode.ErrorCode.EXCEPTION);

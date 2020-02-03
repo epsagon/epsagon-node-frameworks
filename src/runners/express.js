@@ -8,6 +8,7 @@ const {
     event,
     errorCode,
 } = require('epsagon');
+const { extractEpsagonHeader } = require('../http.js');
 
 /**
  * Creates an Event representing the running Express (runner)
@@ -55,6 +56,12 @@ function finishRunner(expressEvent, res, req, startTime) {
         params: req.params,
         response_headers: res.getHeaders(),
     });
+
+    if (extractEpsagonHeader(req.headers)) {
+        eventInterface.addToMetadata(expressEvent, {
+            http_trace_id: extractEpsagonHeader(req.headers),
+        });
+    }
 
     if (res.statusCode >= 500) {
         expressEvent.setErrorCode(errorCode.ErrorCode.EXCEPTION);

@@ -70,7 +70,7 @@ function natsSubscribeCallbackMiddleware(
     let originalHandlerSyncErr;
     let runnerResult;
     try {
-        // Initialize tracer and evnets.
+        // Initialize tracer and events.
         tracer.restart();
         const { slsEvent: natsEvent, startTime: natsStartTime } =
         eventInterface.initializeEvent(
@@ -142,7 +142,6 @@ function natsSubscribeCallbackMiddleware(
  */
 function natsSubscribeWrapper(wrappedFunction, serverHostname) {
     return function internalNatsSubscribeWrapper(subject, opts, callback) {
-        let clientRequest;
         const { opts_internal, callback_internal } = getSubscribeParams(opts, callback);
         let patchedCallback = callback_internal;
         try {
@@ -161,13 +160,10 @@ function natsSubscribeWrapper(wrappedFunction, serverHostname) {
                     )
                 );
             };
-            clientRequest = wrappedFunction.apply(this, [subject, opts_internal, patchedCallback]);
         } catch (err) {
-            if (!clientRequest) {
-                clientRequest = wrappedFunction.apply(this, [subject, opts, callback]);
-            }
+            tracer.addException(err);
         }
-        return clientRequest;
+        return wrappedFunction.apply(this, [subject, opts_internal, patchedCallback]);
     };
 }
 

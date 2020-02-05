@@ -75,7 +75,8 @@
     "uglify-es": "^3.3.9"
   },
   "dependencies": {
-    "epsagon": "1.50.0",
+    "epsagon": "1.50.1",
+    "nats": "^1.4.0",
     "semver": "^6.3.0",
     "shimmer": "^1.2.0",
     "uuid4": "^1.0.0"

@@ -176,13 +176,17 @@ function natsConnectWrapper(connectFunction) {
     traceContext.init();
     tracer.getTrace = traceContext.get;
     return function internalNatsConnectWrapper(url, opts) {
-        const connectFunctionResponse = connectFunction(url, opts);
-        if (connectFunctionResponse && connectFunctionResponse.constructor) {
-            if (connectFunctionResponse.constructor.name !== NATS_TYPES.mainWrappedFunction) {
-                return connectFunctionResponse;
+        const connectFunctionResponse = connectFunction.apply(this, [url, opts]);
+        try {
+            if (connectFunctionResponse && connectFunctionResponse.constructor) {
+                if (connectFunctionResponse.constructor.name !== NATS_TYPES.mainWrappedFunction) {
+                    return connectFunctionResponse;
+                }
+                const serverHostname = getServerHostname(connectFunctionResponse.currentServer);
+                shimmer.wrap(connectFunctionResponse, 'subscribe', () => natsSubscribeWrapper(connectFunctionResponse.subscribe, serverHostname));
             }
-            const serverHostname = getServerHostname(connectFunctionResponse.currentServer);
-            shimmer.wrap(connectFunctionResponse, 'subscribe', () => natsSubscribeWrapper(connectFunctionResponse.subscribe, serverHostname));
+        } catch (err) {
+            tracer.addException(err);
         }
         return connectFunctionResponse;
     };

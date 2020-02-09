@@ -32,9 +32,9 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
             'trigger'
         );
         tracer.addEvent(pubSubEvent);
-
         // Getting message data.
         let triggerMetadata = { messageId: message.id };
+        pubSubEvent.setId(message.id);
         const messageData = (message.data && JSON.parse(`${message.data}`));
         if (messageData && typeof messageData === 'object') {
             triggerMetadata = Object.assign(triggerMetadata, messageData);
@@ -48,7 +48,7 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
             setError,
         };
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
-            'node_function', 'messageHandler', 'messageReceived', 'runner'
+            'node_function', 'message_handler', 'execute', 'runner'
         );
         let runnerResult;
         try {

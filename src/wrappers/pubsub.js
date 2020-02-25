@@ -2,16 +2,13 @@
  * @fileoverview Handlers for Pubsub instrumentation
  */
 
-const shimmer = require('shimmer');
 const {
     tracer,
-    tryRequire,
+    moduleUtils,
     eventInterface,
     utils,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
-
-const subscriber = tryRequire('@google-cloud/pubsub/build/src/subscriber');
 
 /**
  * Handle subscriber event emitter of eventName='message'
@@ -111,9 +108,11 @@ module.exports = {
      * Initializes the pubsub tracer
      */
     init() {
-        const subscription = tryRequire('@google-cloud/pubsub/build/src/subscription');
-        if (subscriber) {
-            shimmer.wrap(subscription.Subscription.prototype, 'on', pubSubSubscriberWrapper);
-        }
+        moduleUtils.patchModule(
+            '@google-cloud/pubsub/build/src/subscription',
+            'on',
+            pubSubSubscriberWrapper,
+            subscription => subscription.Subscription.prototype
+        );
     },
 };

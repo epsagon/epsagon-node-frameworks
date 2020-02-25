@@ -8,13 +8,11 @@ const {
     tracer,
     utils,
     eventInterface,
-    tryRequire,
+    moduleUtils,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const hapiRunner = require('../runners/hapi.js');
 const { ignoredEndpoints } = require('../http.js');
-
-const Hapi = tryRequire('hapi');
 
 
 /**
@@ -134,11 +132,15 @@ module.exports = {
      * Initializes the Hapi tracer
      */
     init() {
-        if (Hapi && Hapi.server) {
-            shimmer.wrap(Hapi, 'server', hapiServerWrapper);
-        }
-        if (Hapi && Hapi.Server) {
-            shimmer.wrap(Hapi, 'Server', hapiServerWrapper);
-        }
+        moduleUtils.patchModule(
+            'hapi',
+            'server',
+            hapiServerWrapper
+        );
+        moduleUtils.patchModule(
+            'hapi',
+            'Server',
+            hapiServerWrapper
+        );
     },
 };

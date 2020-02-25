@@ -3,17 +3,15 @@
  * @fileoverview Handlers for Koa instrumentation
  */
 
-const shimmer = require('shimmer');
 const {
     tracer,
     utils,
-    tryRequire,
+    moduleUtils,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const koaRunner = require('../runners/koa.js');
 const { ignoredEndpoints } = require('../http.js');
 
-const Koa = tryRequire('koa/lib/application.js');
 
 /**
  * Koa requests middleware that runs in context
@@ -93,8 +91,11 @@ module.exports = {
      * Initializes the Koa tracer
      */
     init() {
-        if (Koa) {
-            shimmer.wrap(Koa.prototype, 'use', koaWrapper);
-        }
+        moduleUtils.patchModule(
+            'koa/lib/application.js',
+            'use',
+            koaWrapper,
+            Koa => Koa.prototype
+        );
     },
 };

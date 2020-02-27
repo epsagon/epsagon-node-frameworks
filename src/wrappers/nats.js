@@ -75,13 +75,16 @@ function natsSubscribeCallbackMiddleware(
         const { slsEvent: natsEvent, startTime: natsStartTime } =
         eventInterface.initializeEvent(
             'nats',
-            serverHostname,
+            callback_subject,
             isRequestCall ? 'requestMessageListener' : 'subscribeMessageListener',
             'trigger'
         );
         tracer.addEvent(natsEvent);
         // Getting message data.
         const triggerMetadata = {};
+        if (serverHostname) {
+            triggerMetadata.serverHostname = serverHostname;
+        }
         if (callback_msg) {
             triggerMetadata.msg = callback_msg;
         }
@@ -97,7 +100,10 @@ function natsSubscribeCallbackMiddleware(
         // Finalize nats event.
         eventInterface.finalizeEvent(natsEvent, natsStartTime, null, triggerMetadata);
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
-            'node_function', 'messageHandler', 'messageReceived', 'runner'
+            'node_function',
+            isRequestCall ? 'requestMessagHandler' : 'subscribeMessageHandler',
+            'messageReceived',
+            'runner'
         );
         try {
             runnerResult = callback(callback_msg, callback_reply, callback_subject, callback_sid);

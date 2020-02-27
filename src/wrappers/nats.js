@@ -6,7 +6,7 @@
 const shimmer = require('shimmer');
 const {
     tracer,
-    tryRequire,
+    moduleUtils,
     eventInterface,
     utils,
 } = require('epsagon');
@@ -197,9 +197,10 @@ module.exports = {
      * Initializes the nats tracer
      */
     init() {
-        const nats = tryRequire('nats');
-        if (nats) {
-            shimmer.wrap(nats, 'connect', natsConnectWrapper);
-        }
+        moduleUtils.patchModule(
+            'nats',
+            'connect',
+            natsConnectWrapper
+        );
     },
 };

@@ -3,17 +3,14 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
-const shimmer = require('shimmer');
 const {
     tracer,
     utils,
-    tryRequire,
+    moduleUtils,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const expressRunner = require('../runners/express.js');
 const { ignoredEndpoints } = require('../http.js');
-
-const express = tryRequire('express');
 
 /**
  * Express requests middleware that runs in context
@@ -93,8 +90,11 @@ module.exports = {
      * Initializes the Express tracer
      */
     init() {
-        if (express && express.application) {
-            shimmer.wrap(express.application, 'init', expressWrapper);
-        }
+        moduleUtils.patchModule(
+            'express',
+            'init',
+            expressWrapper,
+            express => express.application
+        );
     },
 };

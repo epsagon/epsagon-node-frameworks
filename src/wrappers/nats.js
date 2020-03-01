@@ -54,6 +54,7 @@ const getSubscribeParams = (opts, callback) => {
  * @param {String} callback_subject received subject.
  * @param {Number} callback_sid received subscribe id.
  * @param {Function} callback  callback function.
+ * @param {Boolean} jsonConnectProperty json connect property.
  * @param {String} serverHostname nats server host name.
  * @param {Boolean} isRequestCall true if this subscribe call came from nats Client.request.
  * @returns {Object} callback result.
@@ -64,6 +65,7 @@ function natsSubscribeCallbackMiddleware(
     callback_subject,
     callback_sid,
     callback,
+    jsonConnectProperty,
     serverHostname,
     isRequestCall
 ) {
@@ -82,14 +84,9 @@ function natsSubscribeCallbackMiddleware(
         tracer.addEvent(natsEvent);
         // Getting message data.
         const triggerMetadata = {};
+        const payload = {};
         if (serverHostname) {
             triggerMetadata.serverHostname = serverHostname;
-        }
-        if (callback_msg) {
-            triggerMetadata.msg = callback_msg;
-        }
-        if (callback_reply) {
-            triggerMetadata.reply = callback_reply;
         }
         if (callback_subject) {
             triggerMetadata.subject = callback_subject;
@@ -97,8 +94,21 @@ function natsSubscribeCallbackMiddleware(
         if (callback_sid) {
             triggerMetadata.sid = callback_sid;
         }
+        if (callback_msg) {
+            payload.msg = callback_msg;
+            if (jsonConnectProperty && typeof callback_msg === 'object' &&
+            (process.env.EPSAGON_PROPAGATE_NATS_ID || '').toUpperCase() === 'TRUE') {
+                const { epsagon_id } = callback_msg;
+                if (epsagon_id) {
+                    triggerMetadata.epsagon_id = epsagon_id;
+                }
+            }
+        }
+        if (callback_reply) {
+            payload.reply = callback_reply;
+        }
         // Finalize nats event.
-        eventInterface.finalizeEvent(natsEvent, natsStartTime, null, triggerMetadata);
+        eventInterface.finalizeEvent(natsEvent, natsStartTime, null, triggerMetadata, payload);
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function',
             isRequestCall ? 'requestMessagHandler' : 'subscribeMessageHandler',
@@ -144,9 +154,10 @@ function natsSubscribeCallbackMiddleware(
  * Wraps nats subscribe function with tracing.
  * @param {Function} wrappedFunction nats subscribe function.
  * @param {string} serverHostname nats server host name.
+ * @param {Boolean} jsonConnectProperty json connect property.
  * @return {Function} subscribe function rsoponse.
  */
-function natsSubscribeWrapper(wrappedFunction, serverHostname) {
+function natsSubscribeWrapper(wrappedFunction, serverHostname, jsonConnectProperty) {
     return function internalNatsSubscribeWrapper(subject, opts, callback) {
         const { opts_internal, callback_internal } = getSubscribeParams(opts, callback);
         let patchedCallback = callback_internal;
@@ -161,6 +172,7 @@ function natsSubscribeWrapper(wrappedFunction, serverHostname) {
                         callback_subject,
                         callback_sid,
                         callback_internal,
+                        jsonConnectProperty,
                         serverHostname,
                         isRequestCall
                     )
@@ -188,8 +200,10 @@ function natsConnectWrapper(connectFunction) {
                 if (connectFunctionResponse.constructor.name !== NATS_TYPES.mainWrappedFunction) {
                     return connectFunctionResponse;
                 }
+                const jsonConnectProperty = connectFunctionResponse.options ?
+                    connectFunctionResponse.options.json : null;
                 const serverHostname = getServerHostname(connectFunctionResponse.currentServer);
-                shimmer.wrap(connectFunctionResponse, 'subscribe', () => natsSubscribeWrapper(connectFunctionResponse.subscribe, serverHostname));
+                shimmer.wrap(connectFunctionResponse, 'subscribe', () => natsSubscribeWrapper(connectFunctionResponse.subscribe, serverHostname, jsonConnectProperty));
             }
         } catch (err) {
             tracer.addException(err);

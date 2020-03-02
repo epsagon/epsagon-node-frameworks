@@ -86,7 +86,7 @@ function natsSubscribeCallbackMiddleware(
         const triggerMetadata = {};
         const payload = {};
         if (serverHostname) {
-            triggerMetadata.serverHostname = serverHostname;
+            triggerMetadata.server_host_name = serverHostname;
         }
         if (callback_subject) {
             triggerMetadata.subject = callback_subject;

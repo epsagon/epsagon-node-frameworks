@@ -7,6 +7,7 @@ const {
     moduleUtils,
     eventInterface,
     utils,
+    config,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 
@@ -33,8 +34,11 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
         let triggerMetadata = { messageId: message.id };
         pubSubEvent.setId(message.id);
         const messageData = (message.data && JSON.parse(`${message.data}`));
-        if (messageData && typeof messageData === 'object') {
-            triggerMetadata = Object.assign(triggerMetadata, messageData);
+        // add message only when METADATA_ONLY === FALSE
+        if (!config.getConfig().metadataOnly) {
+            if (messageData && typeof messageData === 'object') {
+                triggerMetadata = Object.assign(triggerMetadata, messageData);
+            }
         }
         eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, triggerMetadata);
 

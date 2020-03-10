@@ -7,7 +7,6 @@ const {
     moduleUtils,
     eventInterface,
     utils,
-    config,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 
@@ -31,16 +30,15 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
         );
         tracer.addEvent(pubSubEvent);
         // Getting message data.
-        let triggerMetadata = { messageId: message.id };
-        pubSubEvent.setId(message.id);
+        const messageId = message.id;
+        const triggerMetadata = { messageId };
+        let payload = {};
+        pubSubEvent.setId(messageId);
         const messageData = (message.data && JSON.parse(`${message.data}`));
-        // add message only when METADATA_ONLY === FALSE
-        if (!config.getConfig().metadataOnly) {
-            if (messageData && typeof messageData === 'object') {
-                triggerMetadata = Object.assign(triggerMetadata, messageData);
-            }
+        if (messageData && typeof messageData === 'object') {
+            payload = messageData;
         }
-        eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, triggerMetadata);
+        eventInterface.finalizeEvent(pubSubEvent, pubSubStartTime, null, triggerMetadata, payload);
 
         const { label, setError } = tracer;
         // eslint-disable-next-line no-param-reassign

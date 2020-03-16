@@ -22,7 +22,7 @@ async function koaMiddleware(ctx, next) {
     // Check if endpoint is ignored
     if (ignoredEndpoints().includes(ctx.request.originalUrl)) {
         utils.debugLog(`Ignoring request: ${ctx.request.originalUrl}`);
-        next();
+        await next();
         return;
     }
 
@@ -56,7 +56,7 @@ async function koaMiddleware(ctx, next) {
     } catch (err) {
         utils.debugLog(err);
     } finally {
-        next();
+        await next();
     }
 }
 
@@ -81,6 +81,13 @@ function koaWrapper(wrappedFunction) {
                 () => koaMiddleware(ctx, next)
             )
         );
+
+        // Wrap error events
+        this.on('error', async (err, ctx) => {
+            if (ctx.epsagon) {
+                await ctx.epsagon.setError(err);
+            }
+        });
         return result;
     };
 }

@@ -16,9 +16,8 @@ npm install --save epsagon-frameworks
 
 ## Express application
 
-If you're running express.js application on any non Lambda environment, you can still use Epsagon!
+If you're running express.js application, trace your code with the following example:
 Note: Only Express 4 and above is supported
-You can accomplish that with the following example:
 
 ```node
 const express = require('express');
@@ -39,9 +38,9 @@ app.listen(3000)
 
 ## Hapi application
 
-If you're running Hapi.js application on any non Lambda environment, you can still use Epsagon!
+If you're running Hapi.js application, trace your code with the following example:
 Note: Only Hapi 17 and above is supported
-You can accomplish that with the following example:
+
 
 ```node
 const Hapi = require('hapi');
@@ -83,8 +82,7 @@ EPSAGON_ALLOW_NO_ROUTE=TRUE
 
 ## Koa application
 
-If you're running Koa.js application on any non Lambda environment, you can still use Epsagon!
-You can accomplish that with the following example:
+If you're running Koa.js application, trace your code with the following example:
 
 ```node
 const Koa = require('koa');
@@ -106,6 +104,32 @@ app.use(async ctx => {
 });
 
 app.listen(3000)
+```
+
+## SQS Consumer application
+
+If you're running `sqs-consumer` application, trace your code with the following example: 
+
+```node
+const { Consumer } = require('sqs-consumer');
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+    token: 'my-secret-token',
+    appName: 'my-app-name',
+    metadataOnly: false,
+});
+
+const app = Consumer.create({
+  queueUrl: '...',
+  handleMessage: async (message) => {
+    console.log(message);
+    message.epsagon.label('key', 'value');
+  },
+  messageAttributeNames: ['...'],
+});
+
+app.start();
 ```
 
 

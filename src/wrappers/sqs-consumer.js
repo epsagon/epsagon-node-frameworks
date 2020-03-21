@@ -102,7 +102,6 @@ function sqsConsumerWrapper(wrappedFunction) {
         );
         app.originalHandleMessage = app.handleMessage;
         app.handleMessage = patchedCallback;
-        // Add error events
         return app;
     };
 }

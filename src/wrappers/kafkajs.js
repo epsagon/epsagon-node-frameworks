@@ -8,8 +8,11 @@ const {
     moduleUtils,
     eventInterface,
     utils,
+    consts,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
+
+const { EPSAGON_HEADER } = consts;
 
 /**
  * acts as a middleware for `consumer.run()`
@@ -34,8 +37,8 @@ function kafkaMiddleware(message, originalHandler) {
             offset: message.message.offset,
             timestamp: new Date(parseInt(message.message.timestamp, 10)).toUTCString(),
         };
-        if (message.message.headers['epsagon-id']) {
-            metadata['epsagon-id'] = message.message.headers['epsagon-id'].toString();
+        if (message.message.headers[EPSAGON_HEADER]) {
+            metadata[EPSAGON_HEADER] = message.message.headers[EPSAGON_HEADER].toString();
         }
 
         // Convert headers from array to object and stringify them

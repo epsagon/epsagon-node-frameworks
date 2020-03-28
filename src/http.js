@@ -2,6 +2,7 @@
  * @fileoverview Utility functions
  */
 let ignoredEndpoints = [];
+const EPSAGON_HEADER = 'epsagon-trace-id';
 
 /**
  * Sets the ignored endpoints for the frameworks
@@ -26,9 +27,10 @@ function getIgnoredEndpoints() {
  * @returns {String} Epsagon header value
  */
 function extractEpsagonHeader(headers) {
-    return headers && headers['epsagon-trace-id'];
+    return headers && headers[EPSAGON_HEADER];
 }
 
 module.exports.ignoreEndpoints = ignoreEndpoints;
 module.exports.ignoredEndpoints = getIgnoredEndpoints;
 module.exports.extractEpsagonHeader = extractEpsagonHeader;
+module.exports.EPSAGON_HEADER = EPSAGON_HEADER;

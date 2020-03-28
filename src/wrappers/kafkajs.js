@@ -8,11 +8,9 @@ const {
     moduleUtils,
     eventInterface,
     utils,
-    consts,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
-
-const { EPSAGON_HEADER } = consts;
+const { EPSAGON_HEADER } = require('../http.js');
 
 /**
  * acts as a middleware for `consumer.run()`
@@ -119,7 +117,7 @@ function kafkaConsumerRunWrapper(wrappedFunction) {
             () => kafkaMiddleware(message, originalHandler)
         );
         // eslint-disable-next-line no-param-reassign
-        options.eachMessage = patchedHandler;
+        options.eachMessage = patchedHandler.bind(options);
         return wrappedFunction.apply(this, [options]);
     };
 }

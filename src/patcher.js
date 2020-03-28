@@ -9,6 +9,7 @@ const koaPatcher = require('./wrappers/koa.js');
 const pubusbPatcher = require('./wrappers/pubsub.js');
 const natsPatcher = require('./wrappers/nats.js');
 const kafkajsPatcher = require('./wrappers/kafkajs.js');
+const sqsConsumerPatcher = require('./wrappers/sqs-consumer.js');
 
 
 /**
@@ -34,5 +35,6 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
         pubusbPatcher,
         natsPatcher,
         kafkajsPatcher,
+        sqsConsumerPatcher,
     ].forEach(patch);
 }

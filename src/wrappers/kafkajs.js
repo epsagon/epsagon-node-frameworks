@@ -75,7 +75,7 @@ function kafkaMiddleware(message, originalHandler) {
         // Handle and finalize async user function.
         if (utils.isPromise(runnerResult)) {
             let originalHandlerAsyncError;
-            runnerResult.catch((err) => {
+            runnerResult = runnerResult.catch((err) => {
                 originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {

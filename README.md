@@ -1,183 +1,428 @@
-# Epsagon Instrumentation for Node.js Frameworks
+<p align="center">
+  <a href="https://epsagon.com" target="_blank" align="center">
+    <img src="https://cdn2.hubspot.net/hubfs/4636301/Positive%20RGB_Logo%20Horizontal%20-01.svg" width="300">
+  </a>
+  <br />
+</p>
+
 [![Build Status](https://travis-ci.com/epsagon/epsagon-node-frameworks.svg?token=wsveVqcNtBtmq6jpZfSf&branch=master)](https://travis-ci.com/epsagon/epsagon-node-frameworks)
 [![npm version](https://badge.fury.io/js/epsagon-frameworks.svg)](https://badge.fury.io/js/epsagon-frameworks)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
-This package provides an instrumentation to Node.js code running on frameworks for collection of distributed tracing and performance monitoring.
+# Epsagon Tracing for Node.js frameworks
+This package provides tracing to Node.js applications for collection of distributed tracing and performance metrics in [Epsagon](https://dashboard.epsagon.com/?utm_source=github).
+
+## Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Auto-tracing](#auto-tracing)
+  - [Calling the SDK](#calling-the-sdk)
+  - [Tagging Traces](#tagging-traces)
+  - [Custom Errors](#custom-errors)
+  - [Filter Sensitive Data](#filter-sensitive-data)
+  - [Ignore Endpoints](#ignore-endpoints)
+- [Frameworks](#frameworks)
+- [Integrations](#integrations)
+- [Configuration](#configuration)
+- [Getting Help](#getting-help)
+- [Opening Issues](#opening-issues)
+- [License](#license)
+
 
 ## Installation
 
-From your project directory:
-
+To install Epsagon, simply run:
 ```sh
-npm install --save epsagon-frameworks
+npm install epsagon-frameworks
 ```
 
+## Usage
 
-## Express application
+### Auto-tracing
 
-If you're running express.js application, trace your code with the following example:
-Note: Only Express 4 and above is supported
+The simplest way to get started is to run your node command with the following environment variable:
+```sh
+NODE_OPTIONS='-r epsagon-frameworks' <command>
+```
 
-```node
-const express = require('express');
+For example:
+```sh
+NODE_OPTIONS='-r epsagon-frameworks' node app.js
+```
+
+You can see the list of [supported frameworks](#frameworks)
+
+### Calling the SDK
+
+Another simple alternative is to copy the snippet into your code:
+```javascript
 const epsagon = require('epsagon-frameworks');
 
 epsagon.init({
-    token: 'my-secret-token',
-    appName: 'my-app-name',
-    metadataOnly: false,
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
 });
-
-const app = express()
-
-app.get('/', (req, res) => res.send('Hello World!'))
-
-app.listen(3000)
 ```
 
-## Hapi application
-
-If you're running Hapi.js application, trace your code with the following example:
-Note: Only Hapi 17 and above is supported
+To run on your framework please refer to [supported frameworks](#frameworks)
 
 
-```node
-const Hapi = require('hapi');
-const epsagon = require('epsagon-frameworks');
+### Tagging Traces
 
-epsagon.init({
-    token: 'my-secret-token',
-    appName: 'my-app-name',
-    metadataOnly: false,
-});
+You can add custom tags to your traces, for easier filtering and aggregations.
 
-const init = async () => {
-
-    const server = Hapi.server({
-        port: 3000,
-        host: 'localhost'
-    });
-
-    server.route({
-        method: 'GET',
-        path:'/',
-        handler: (request, h) => {
-            return 'Hello World!';
-        }
-    });
-
-    await server.start();
-    console.log('Server running on %ss', server.info.uri);
-};
-
-init();
+Add the following call inside your code:
+```javascript
+epsagon.label('key', 'value');
+epsagon.label('userId', userId);
 ```
 
-You can allow tracing for non-route requests by setting the Allow No Routes environment variable
-```bash
-EPSAGON_ALLOW_NO_ROUTE=TRUE
-```
+In some [frameworks](#frameworks) tagging can be done in different ways.
 
+### Custom Errors
 
-## Koa application
+You can set a trace as an error (although handled correctly) to get an alert or just follow it on the dashboard.
 
-If you're running Koa.js application, trace your code with the following example:
-
-```node
-const Koa = require('koa');
-const epsagon = require('epsagon-frameworks');
-
-epsagon.init({
-    token: 'my-secret-token',
-    appName: 'my-app-name',
-    metadataOnly: false,
-});
-
-const app = new Koa();
-
-app.use(async ctx => {
-  ctx.body = 'Hello World';
-
-  // Example label usage
-  ctx.epsagon.label('myFirstLabel', 'customValue1');
-});
-
-app.listen(3000)
-```
-
-## SQS Consumer application
-
-If you're running `sqs-consumer` application, trace your code with the following example: 
-
-```node
-const { Consumer } = require('sqs-consumer');
-const epsagon = require('epsagon-frameworks');
-
-epsagon.init({
-    token: 'my-secret-token',
-    appName: 'my-app-name',
-    metadataOnly: false,
-});
-
-const app = Consumer.create({
-  queueUrl: '...',
-  handleMessage: async (message) => {
-    console.log(message);
-    message.epsagon.label('key', 'value');
-  },
-  messageAttributeNames: ['...'],
-});
-
-app.start();
-```
-
-
-## Custom labels
-
-You can add custom labels to your traces. Filters can later be used for filtering
-traces that contains specific labels:
-```node
-function handler(event, context, callback) {
-    epsagon.label('myCustomLabel', 'labelValue');
-    callback(null, 'It worked!')
+Add the following call inside your code:
+```javascript
+try {
+  // something bad happens
+} catch (err) {
+  epsagon.setError(err);
 }
+
+// Or manually specify Error object
+epsagon.setError(Error('My custom error'));
 ```
 
-## Custom errors
+In some [frameworks](#frameworks) custom errors can be done in different ways.
 
-You can set a trace as an error (although handled correctly) by catching an error:
-```node
-function handler(event, context, callback) {
-    try {
-        // something bad happens
-    } catch (err) {
-        epsagon.setError(err);
-    }
+### Filter Sensitive Data
 
-    callback(null, 'It worked!')
-}
+You can pass a list of sensitive properties and hostnames and they will be filtered out from the traces:
+
+```javascript
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+  ignoredKeys: ['password', /.*_token$/],
+  urlPatternsToIgnore: ['example.com', 'auth.com'],
+});
 ```
 
-Or manually specify Error object:
-```node
-function handler(event, context, callback) {
-    epsagon.setError(Error('My custom error'));
-    callback(null, 'It worked!')
-}
-```
+The `ignoredKeys` property can contain strings (will perform a lose match, so that `First Name` also matches `first_name`), regular expressions, and predicate functions.
+Also you can set `urlPatternsToIgnore` to ignore HTTP calls to specific domains.
 
 
-## Ignoring endpoints
+### Ignore Endpoints
 
-You can ignore certain requests by specifying endpoints:
-```node
+You can ignore certain incoming requests by specifying endpoints:
+```javascript
 epsagon.ignoreEndpoints(['/healthcheck'])
 ```
 
 
-## Copyright
+## Frameworks
+
+The following frameworks are supported with Epsagon.
+Some require installing also [`epsagon-frameworks`](https://github.com/epsagon/epsagon-node-frameworks)
+
+|Framework                               |Supported Version          |Epsagon Library                                    |Auto-tracing Supported                              |
+|----------------------------------------|---------------------------|---------------------------------------------------|----------------------------------------------------|
+|[Express](#express)                     |`>=3.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[Hapi](#hapi)                           |`>=17.0.0`                 |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[Koa](#koa)                             |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[KafkaJS](#kafkajs)                     |`>=1.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[PubSub](#pubsub)                       |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[SQS Consumer](#sqs-consumer)           |`>=4.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[NATS](#nats)                           |`>=1.4.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[Generic](#generic)                     |All                        |`epsagon`                                          |<ul><li>- [ ] </li></ul>                             |
+
+
+### Express
+
+Tracing Express application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the application is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+app.get('/', (req, res) => {
+  req.epsagon.label('key', 'value');
+  req.epsagon.setError(Error('My custom error'));
+}
+```
+
+### Hapi
+
+Tracing Hapi application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the application is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+server.route({
+  method: 'GET',
+  path:'/',
+  handler: (request, h) => {
+      request.epsagon.label('key', 'value');
+      request.epsagon.setError(Error('My custom error'));
+  }
+});
+```
+
+### Koa
+
+Tracing Koa application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the application is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+app.use(async ctx => {
+  ctx.epsagon.label('key', 'value');
+  ctx.epsagon.setError(Error('My custom error'));
+});
+```
+
+### KafkaJS
+
+Tracing `kafkajs` consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+await consumer.run({
+  eachMessage: async ({ topic, partition, message }) => {
+    message.epsagon.label('key', 'value');
+    message.epsagon.setError(Error('My custom error'));
+  },
+})
+```
+
+### PubSub
+
+Tracing `@google-cloud/pubsub` consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+await consumer.run({
+  eachMessage: async ({ topic, partition, message }) => {
+    message.epsagon.label('key', 'value');
+    message.epsagon.setError(Error('My custom error'));
+  },
+})
+```
+
+### SQS Consumer
+
+Tracing [`sqs-consumer`](https://github.com/bbc/sqs-consumer) consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+const messageHandler = message => {
+  message.epsagon.label('key', 'value');
+  message.epsagon.setError(Error('My custom error'));
+};
+```
+
+### NATS
+
+Tracing `nats` consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+
+### Generic
+
+For any tracing, you can simply use the generic Epsagon wrapper using the following example:
+
+```javascript
+const epsagon = require('epsagon');
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+
+
+function main(params) {
+  // Your code is here
+}
+
+const wrappedMain = epsagon.nodeWrapper(main);
+```
+
+## Integrations
+
+Epsagon provides out-of-the-box instrumentation (tracing) for many popular frameworks and libraries.
+
+|Library             |Supported Version          |
+|--------------------|---------------------------|
+|http                |Fully supported            |
+|https               |Fully supported            |
+|http2               |Fully supported            |
+|dns                 |Fully supported            |
+|aws-sdk             |`>=2.2.0`                  |
+|amazon-dax-client   |`>=1.0.2`                  |
+|@google-cloud       |`>=2.0.0`                  |
+|@google-cloud/pubsub|`>=1.1.0`                  |
+|mysql               |`>=2`                      |
+|mysql2              |`>=1`                      |
+|pg                  |`>=4`                      |
+|mongodb             |`>=3.0.0`                  |
+|kafkajs             |`>=1.2.0`                  |
+|redis               |`>=0.12.1`                 |
+|mqtt                |`>=2.13.1`                 |
+|nats                |`>=1.4.0`                  |
+|openwhisk           |`>=3.0.0`                  |
+
+
+## Configuration
+
+Advanced options can be configured as a parameter to the init() method or as environment variables.
+
+|Parameter          |Environment Variable       |Type   |Default      |Description                                                                        |
+|-------------------|---------------------------|-------|-------------|-----------------------------------------------------------------------------------|
+|token              |EPSAGON_TOKEN              |String |-            |Epsagon account token                                                              |
+|appName            |EPSAGON_APP_NAME           |String |`Application`|Application name that will be set for traces                                       |
+|metadataOnly       |EPSAGON_METADATA           |Boolean|`true`       |Whether to send only the metadata (`true`) or also the payloads (`false`)          |
+|useSSL             |EPSAGON_SSL                |Boolean|`true`       |Whether to send the traces over HTTPS SSL or not                                   |
+|traceCollectorURL  |-                          |String |-            |The address of the trace collector to send trace to                                |
+|isEpsagonDisabled  |DISABLE_EPSAGON            |Boolean|`false`      |A flag to completely disable Epsagon (can be used for tests or locally)            |
+|ignoredKeys        |EPSAGON_IGNORED_KEYS       |Array  |-            |Array of keys names (can be string or regex) to be removed from the trace
+|urlPatternsToIgnore|EPSAGON_URLS_TO_IGNORE     |Array  |`[]`         |Array of URL patterns to ignore the calls                                          |
+|sendTimeout        |EPSAGON_SEND_TIMEOUT_SEC   |Float  |`0.2`        |The timeout duration in seconds to send the traces to the trace collector          |
+|decodeHTTP         |EPSAGON_DECODE_HTTP        |Boolean|`true`       |Whether to decode and decompress HTTP responses into the payload                   |
+|httpErrorStatusCode|EPSAGON_HTTP_ERR_CODE      |Integer|`400`        |The minimum number of an HTTP response status code to treat as an error            |
+|-                  |DISABLE_EPSAGON_PATCH      |Boolean|`false`      |Disable the library patching (instrumentation)                                     |
+|-                  |EPSAGON_DEBUG              |Boolean|`false`      |Enable debug prints for troubleshooting                                            |
+|-                  |EPSAGON_PROPAGATE_NATS_ID  |Boolean|`false`      |Whether to propagate a correlation ID in NATS.io calls for distributed tracing     |
+|-                  |EPSAGON_ADD_NODE_PATH      |String |-            |List of folders to looks for node_modules when patching libraries. Separated by `:`|
+|-                  |EPSAGON_DNS_INSTRUMENTATION|Boolean|`false`      |Whether to capture `dns` calls into the trace                                      |
+
+
+## Getting Help
+
+If you have any issue around using the library or the product, please don't hesitate to:
+
+* Use the [documentation](https://docs.epsagon.com).
+* Use the help widget inside the product.
+* Open an issue in GitHub.
+
+
+## Opening Issues
+
+If you encounter a bug with the Epsagon library for Node.js, we want to hear about it.
+
+When opening a new issue, please provide as much information about the environment:
+* Library version, Node.js runtime version, dependencies, etc.
+* Snippet of the usage.
+* A reproducible example can really help.
+
+The GitHub issues are intended for bug reports and feature requests.
+For help and questions about Epsagon, use the help widget inside the product.
+
+## License
 
 Provided under the MIT license. See LICENSE for details.
 
-Copyright 2019, Epsagon
+Copyright 2020, Epsagon

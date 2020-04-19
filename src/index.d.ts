@@ -1,7 +1,4 @@
-// epsagon.d.ts
 declare module 'epsagon' {
-  import 'aws-lambda'
-
   export function init(options: {
     token: string
     appName: string

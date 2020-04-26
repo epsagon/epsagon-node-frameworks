@@ -32,6 +32,7 @@ function createRunner(req, startTime) {
     ]);
 
     hapiEvent.setResource(resource);
+    eventInterface.createLogIdMetadata(hapiEvent);
 
     return hapiEvent;
 }

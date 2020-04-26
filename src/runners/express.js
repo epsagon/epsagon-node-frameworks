@@ -33,6 +33,7 @@ function createRunner(req, startTime) {
     ]);
 
     expressEvent.setResource(resource);
+    eventInterface.createLogIdMetadata(expressEvent);
 
     return expressEvent;
 }

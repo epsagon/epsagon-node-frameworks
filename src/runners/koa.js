@@ -33,6 +33,7 @@ function createRunner(req, startTime) {
     ]);
 
     koaEvent.setResource(resource);
+    eventInterface.createLogIdMetadata(koaEvent);
 
     return koaEvent;
 }

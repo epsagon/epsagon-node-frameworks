@@ -33,6 +33,9 @@ function createRunner(req, startTime) {
     ]);
 
     expressEvent.setResource(resource);
+    eventInterface.addToMetadata(expressEvent, {
+        log_id: uuid4(),
+    });
 
     return expressEvent;
 }

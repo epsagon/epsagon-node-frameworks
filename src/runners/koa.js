@@ -33,6 +33,9 @@ function createRunner(req, startTime) {
     ]);
 
     koaEvent.setResource(resource);
+    eventInterface.addToMetadata(koaEvent, {
+        log_id: uuid4(),
+    });
 
     return koaEvent;
 }

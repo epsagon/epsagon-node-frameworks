@@ -32,6 +32,9 @@ function createRunner(req, startTime) {
     ]);
 
     hapiEvent.setResource(resource);
+    eventInterface.addToMetadata(hapiEvent, {
+        log_id: uuid4(),
+    });
 
     return hapiEvent;
 }

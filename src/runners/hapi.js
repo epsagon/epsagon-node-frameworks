@@ -32,7 +32,6 @@ function createRunner(req, startTime) {
     ]);
 
     hapiEvent.setResource(resource);
-    eventInterface.addLoggingTracingEnabledMetadata(hapiEvent);
     eventInterface.createTraceIdMetadata(hapiEvent);
 
     return hapiEvent;

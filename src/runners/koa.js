@@ -33,7 +33,6 @@ function createRunner(req, startTime) {
     ]);
 
     koaEvent.setResource(resource);
-    eventInterface.addLoggingTracingEnabledMetadata(koaEvent);
     eventInterface.createTraceIdMetadata(koaEvent);
 
     return koaEvent;

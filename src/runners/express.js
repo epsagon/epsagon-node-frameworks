@@ -58,7 +58,7 @@ function finishRunner(expressEvent, res, req, startTime) {
     });
     
     if (req.route) {
-         eventInterface.addToMetadata(expressEvent, {route: req.route})
+         eventInterface.addToMetadata(expressEvent, {route_path: req.route.path})
     }
 
     if (extractEpsagonHeader(req.headers)) {

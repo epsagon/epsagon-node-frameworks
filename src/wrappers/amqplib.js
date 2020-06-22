@@ -17,9 +17,11 @@ const { EPSAGON_HEADER } = require('../http.js');
  * @param {Function} callback the callback function
  * @param {Channel} channel the Channel object of amqplib
  * @param {function} originalHandler original consumer function
+ * @returns {object} runnerResult original callback result
  */
 function amqplibSubscriberMiddleware(message, callback, channel) {
     let originalHandlerSyncErr;
+    let runnerResult;
     try {
         // Initialize tracer and runner.
         tracer.restart();
@@ -53,18 +55,15 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
             label,
             setError,
         };
+        const runnerName = callback && callback.name ? callback.name : `${message.fields.routingKey}-consumer`;
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
-            'node_function', 'message_handler', 'execute', 'runner'
+            'node_function', runnerName, 'execute', 'runner'
         );
-        let runnerResult;
+
         try {
             runnerResult = callback(message);
         } catch (err) {
             originalHandlerSyncErr = err;
-        }
-
-        if (callback.name) {
-            nodeEvent.getResource().setName(callback.name);
         }
 
         // Handle and finalize async user function.
@@ -90,6 +89,7 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
     if (originalHandlerSyncErr) {
         throw originalHandlerSyncErr;
     }
+    return runnerResult;
 }
 
 /**

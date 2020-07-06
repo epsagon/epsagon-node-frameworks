@@ -127,11 +127,39 @@ function hapiServerWrapper(wrappedFunction) {
 }
 
 
+/**
+ * Wraps the @hapi/hapi module route rebuild function with tracing
+ * @param {Function} wrappedFunction Hapi init function
+ * @return {Function} updated wrapped init
+ */
+function hapiRebuildWrapper(wrappedFunction) {
+    traceContext.init();
+    tracer.getTrace = traceContext.get;
+    return function internalHapiRebuildWrapper() {
+        const handler = wrappedFunction.apply(this);
+        const originalHandler = this.settings.handler;
+        // Changing the original handler to the middleware
+        // eslint-disable-next-line no-param-reassign
+        this.settings.handler = (request, h) => traceContext.RunInContext(
+            tracer.createTracer,
+            () => hapiMiddleware(request, h, originalHandler)
+        );
+        return handler;
+    };
+}
+
+
 module.exports = {
     /**
      * Initializes the Hapi tracer
      */
     init() {
+        moduleUtils.patchModule(
+            '@hapi/hapi/lib/route.js',
+            'rebuild',
+            hapiRebuildWrapper,
+            hapi => hapi.prototype
+        );
         moduleUtils.patchModule(
             'hapi',
             'server',

@@ -100,30 +100,38 @@ function bunnybusConsumerWrapper(wrappedFunction) {
     traceContext.init();
     tracer.getTrace = traceContext.get;
     return function internalBunnybusConsumerWrapper(queue, handlers, options) {
-        if (options.meta) {
-            // Enabling tracing only if meta is enabled.
-            const bunny = this;
-            bunny.__EPSAGON_PATCH = {}; // eslint-disable-line no-underscore-dangle
-            Object.keys(handlers).forEach((topic) => {
-                const callback = handlers[topic];
-                // eslint-disable-next-line no-underscore-dangle
-                if (typeof handlers[topic] === 'function' && bunny.__EPSAGON_PATCH && !bunny.__EPSAGON_PATCH[topic]) {
-                    bunny.__EPSAGON_PATCH[topic] = true; // eslint-disable-line no-underscore-dangle
-                    // eslint-disable-next-line no-param-reassign
-                    handlers[topic] = (...args) => traceContext.RunInContext(
-                        tracer.createTracer,
-                        () => bunnybusSubscriberMiddleware(
-                            this.config,
-                            callback,
-                            queue,
-                            topic,
-                            ...args
-                        )
-                    );
-                }
-            });
-        } else {
-            utils.debugLog('Skipping BunnyBus consumer tracing since meta is disabled.');
+        try {
+            if (options.meta) {
+                // Enabling tracing only if meta is enabled.
+                const bunny = this;
+                bunny.__EPSAGON_PATCH = {}; // eslint-disable-line no-underscore-dangle
+                Object.keys(handlers).forEach((topic) => {
+                    const callback = handlers[topic];
+                    if (
+                        typeof handlers[topic] === 'function' &&
+                        bunny.__EPSAGON_PATCH && // eslint-disable-line no-underscore-dangle
+                        !bunny.__EPSAGON_PATCH[topic] // eslint-disable-line no-underscore-dangle
+                    ) {
+                        // eslint-disable-next-line no-underscore-dangle
+                        bunny.__EPSAGON_PATCH[topic] = true;
+                        // eslint-disable-next-line no-param-reassign
+                        handlers[topic] = (...args) => traceContext.RunInContext(
+                            tracer.createTracer,
+                            () => bunnybusSubscriberMiddleware(
+                                this.config,
+                                callback,
+                                queue,
+                                topic,
+                                ...args
+                            )
+                        );
+                    }
+                });
+            } else {
+                utils.debugLog('Skipping BunnyBus consumer tracing since meta is disabled.');
+            }
+        } catch (err) {
+            utils.debugLog(`Could not enable BunnyBus tracing - ${err}`);
         }
         return wrappedFunction.apply(this, [queue, handlers, options]);
     };

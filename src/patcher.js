@@ -11,6 +11,7 @@ const natsPatcher = require('./wrappers/nats.js');
 const kafkajsPatcher = require('./wrappers/kafkajs.js');
 const sqsConsumerPatcher = require('./wrappers/sqs-consumer.js');
 const amqplibPatcher = require('./wrappers/amqplib.js');
+const bunnybusPatcher = require('./wrappers/bunnybus.js');
 
 
 /**
@@ -38,5 +39,6 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
         kafkajsPatcher,
         sqsConsumerPatcher,
         amqplibPatcher,
+        bunnybusPatcher,
     ].forEach(patch);
 }

@@ -17,9 +17,10 @@ const { EPSAGON_HEADER } = require('../http.js');
  * @param {Function} callback the callback function
  * @param {string} queue queue
  * @param {string} topic topic
- * @returns {Array} args original handler arguments
+ * @param {object} handlerParams original handler arguments
+ * @returns {any} runnerResult results from callback
  */
-function bunnybusSubscriberMiddleware(config, callback, queue, topic, ...args) {
+function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerParams) {
     let originalHandlerSyncErr;
     let runnerResult;
     try {
@@ -28,7 +29,7 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, ...args) {
         const { slsEvent: amqpEvent, startTime: amqpStartTime } =
         eventInterface.initializeEvent(
             'rabbitmq',
-            args[1].headers.routeKey,
+            handlerParams.metaData.headers.routeKey,
             'consume',
             'trigger'
         );
@@ -36,7 +37,7 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, ...args) {
         const metadata = {
             host: config.hostname,
             vhost: config.vhost,
-            'messaging.message_payload_size_bytes': JSON.stringify(args[0]).length,
+            'messaging.message_payload_size_bytes': JSON.stringify(handlerParams.message).length,
         };
         if (args[1].headers[EPSAGON_HEADER]) {
             metadata[EPSAGON_HEADER] = args[1].headers[EPSAGON_HEADER].toString();
@@ -44,23 +45,24 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, ...args) {
 
         tracer.addEvent(amqpEvent);
         eventInterface.finalizeEvent(amqpEvent, amqpStartTime, null, metadata, {
-            headers: args[1].headers,
-            message: args[0],
+            headers: handlerParams.metaData.headers,
+            message: handlerParams.message
         });
 
         const { label, setError } = tracer;
         // eslint-disable-next-line no-param-reassign
-        args.push({
+        handlerParams.epsagon = {
             label,
-            setError,
-        });
+            setError
+        };
+        
         const runnerName = callback && callback.name ? callback.name : `${topic}-consumer`;
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', runnerName, 'execute', 'runner'
         );
 
         try {
-            runnerResult = callback(...args);
+            runnerResult = callback(handlerParams);
         } catch (err) {
             originalHandlerSyncErr = err;
         }
@@ -99,41 +101,36 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, ...args) {
 function bunnybusConsumerWrapper(wrappedFunction) {
     traceContext.init();
     tracer.getTrace = traceContext.get;
-    return function internalBunnybusConsumerWrapper(queue, handlers, options) {
+    return function internalBunnybusConsumerWrapper({ queue, handlers, options }) {
         try {
-            if (options.meta) {
-                // Enabling tracing only if meta is enabled.
-                const bunny = this;
-                bunny.__EPSAGON_PATCH = {}; // eslint-disable-line no-underscore-dangle
-                Object.keys(handlers).forEach((topic) => {
-                    const callback = handlers[topic];
-                    if (
-                        typeof handlers[topic] === 'function' &&
-                        bunny.__EPSAGON_PATCH && // eslint-disable-line no-underscore-dangle
-                        !bunny.__EPSAGON_PATCH[topic] // eslint-disable-line no-underscore-dangle
-                    ) {
-                        // eslint-disable-next-line no-underscore-dangle
-                        bunny.__EPSAGON_PATCH[topic] = true;
-                        // eslint-disable-next-line no-param-reassign
-                        handlers[topic] = (...args) => traceContext.RunInContext(
-                            tracer.createTracer,
-                            () => bunnybusSubscriberMiddleware(
-                                this.config,
-                                callback,
-                                queue,
-                                topic,
-                                ...args
-                            )
-                        );
-                    }
-                });
-            } else {
-                utils.debugLog('Skipping BunnyBus consumer tracing since meta is disabled.');
-            }
+            const bunny = this;
+            bunny.__EPSAGON_PATCH = {}; // eslint-disable-line no-underscore-dangle
+            Object.keys(handlers).forEach((topic) => {
+                const callback = handlers[topic];
+                if (
+                    typeof handlers[topic] === 'function' &&
+                    bunny.__EPSAGON_PATCH && // eslint-disable-line no-underscore-dangle
+                    !bunny.__EPSAGON_PATCH[topic] // eslint-disable-line no-underscore-dangle
+                ) {
+                    // eslint-disable-next-line no-underscore-dangle
+                    bunny.__EPSAGON_PATCH[topic] = true;
+                    // eslint-disable-next-line no-param-reassign
+                    handlers[topic] = (handlerParams) => traceContext.RunInContext(
+                        tracer.createTracer,
+                        () => bunnybusSubscriberMiddleware(
+                            this.config,
+                            callback,
+                            queue,
+                            topic,
+                            handlerParams
+                        )
+                    );
+                }
+            });
         } catch (err) {
             utils.debugLog(`Could not enable BunnyBus tracing - ${err}`);
         }
-        return wrappedFunction.apply(this, [queue, handlers, options]);
+        return wrappedFunction.apply(this, { queue, handlers, options });
     };
 }
 

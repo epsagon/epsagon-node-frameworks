@@ -23,6 +23,11 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
     let originalHandlerSyncErr;
     let runnerResult;
     try {
+        if (message.properties.headers.bunnyBus) {
+            utils.debugLog('Skipping BunnyBus messages');
+            return callback(message);
+        }
+
         // Initialize tracer and runner.
         tracer.restart();
         const { slsEvent: amqpEvent, startTime: amqpStartTime } =

@@ -142,8 +142,8 @@ Some require installing also [`epsagon-frameworks`](https://github.com/epsagon/e
 |[KafkaJS](#kafkajs)                     |`>=1.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[PubSub](#pubsub)                       |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[SQS Consumer](#sqs-consumer)           |`>=4.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
-|[amqplib](#amqplib)           |`>=0.5.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
-|[bunnybus](#bunnybus)           |`>=6.7.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[amqplib](#amqplib)                     |`>=0.5.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[bunnybus](#bunnybus)                   |`>=7.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[NATS](#nats)                           |`>=1.4.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Generic](#generic)                     |All                        |`epsagon`                                          |<ul><li>- [ ] </li></ul>                             |
 
@@ -370,9 +370,9 @@ Tagging traces or setting custom errors can be by:
 
 ```javascript
 // epsagon is added as the last argument to the handler
-handler: async (msg, meta, ack, rej, requeue, epsagon) => {
-    msg.epsagon.label('key', 'value');
-    msg.epsagon.setError(Error('My custom error'));
+handler: async ({message, metaData, ack, rej, requeue, epsagon}) => {
+    message.epsagon.label('key', 'value');
+    message.epsagon.setError(Error('My custom error'));
     await ack();
 }
 ```

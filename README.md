@@ -369,10 +369,10 @@ epsagon.init({
 Tagging traces or setting custom errors can be by:
 
 ```javascript
-// epsagon is added as the last argument to the handler
+// epsagon is added as an argument to the handler
 handler: async ({message, metaData, ack, rej, requeue, epsagon}) => {
-    message.epsagon.label('key', 'value');
-    message.epsagon.setError(Error('My custom error'));
+    epsagon.label('key', 'value');
+    epsagon.setError(Error('My custom error'));
     await ack();
 }
 ```
@@ -436,6 +436,7 @@ Epsagon provides out-of-the-box instrumentation (tracing) for many popular frame
 |mongodb             |`>=3.0.0`                  |
 |kafkajs             |`>=1.2.0`                  |
 |redis               |`>=0.12.1`                 |
+|ioredis             |`>=4.0.0`                  |
 |mqtt                |`>=2.13.1`                 |
 |nats                |`>=1.4.0`                  |
 |openwhisk           |`>=3.0.0`                  |

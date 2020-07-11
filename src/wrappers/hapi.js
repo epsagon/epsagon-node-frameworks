@@ -80,6 +80,8 @@ function hapiMiddleware(request, h, originalHandler) {
         }).catch((err) => {
             handleResponse(hapiEvent, request, response, startTime, err);
         });
+    } else {
+        handleResponse(hapiEvent, request, response, startTime);
     }
 
     return response;

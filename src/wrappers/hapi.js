@@ -73,12 +73,16 @@ function hapiMiddleware(request, h, originalHandler) {
         return response;
     }
 
-    // Handle response
-    response.then(() => {
+    // Handle response. In some cases (plugins) it's not a promise.
+    if (utils.isPromise(response)) {
+        response.then(() => {
+            handleResponse(hapiEvent, request, response, startTime);
+        }).catch((err) => {
+            handleResponse(hapiEvent, request, response, startTime, err);
+        });
+    } else {
         handleResponse(hapiEvent, request, response, startTime);
-    }).catch((err) => {
-        handleResponse(hapiEvent, request, response, startTime, err);
-    });
+    }
 
     return response;
 }

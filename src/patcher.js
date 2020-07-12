@@ -12,6 +12,7 @@ const kafkajsPatcher = require('./wrappers/kafkajs.js');
 const sqsConsumerPatcher = require('./wrappers/sqs-consumer.js');
 const amqplibPatcher = require('./wrappers/amqplib.js');
 const bunnybusPatcher = require('./wrappers/bunnybus.js');
+const superagentPatcher = require('./events/superagent.js');
 
 
 /**
@@ -40,5 +41,6 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
         sqsConsumerPatcher,
         amqplibPatcher,
         bunnybusPatcher,
+        superagentPatcher,
     ].forEach(patch);
 }

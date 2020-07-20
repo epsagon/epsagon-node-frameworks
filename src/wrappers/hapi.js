@@ -14,6 +14,13 @@ const traceContext = require('../trace_context.js');
 const hapiRunner = require('../runners/hapi.js');
 const { ignoredEndpoints } = require('../http.js');
 
+const IGNORED_PLUGINS = [
+    'hapi-swagger',
+    'hapi-pino',
+    '@hapi/inert',
+    '@hapi/vision',
+];
+
 
 /**
  * Handles Hapi's response
@@ -102,6 +109,7 @@ function hapiRouteWrapper(wrappedFunction) {
             arguments[0] = [arguments[0]];
         }
         arguments[0].forEach((route) => {
+            if (!route.handler) return;
             const originalHandler = route.handler;
             // Changing the original handler to the middleware
             // eslint-disable-next-line no-param-reassign
@@ -111,6 +119,25 @@ function hapiRouteWrapper(wrappedFunction) {
             );
         });
         return wrappedFunction.apply(this, arguments);
+    };
+}
+
+
+/**
+ * Wraps the Hapi clone function with tracing
+ * @param {Function} wrappedFunction Hapi's server clone function
+ * @return {Function} updated wrapped init
+ */
+function hapiCloneWrapper(wrappedFunction) {
+    return function internalHapiCloneWrapper(name) {
+        const server = wrappedFunction.apply(this, [name]);
+        if (!IGNORED_PLUGINS.includes(name)) {
+            // trace only non-ignored plugins
+            if (server.route) {
+                shimmer.wrap(server, 'route', hapiRouteWrapper);
+            }
+        }
+        return server;
     };
 }
 
@@ -126,29 +153,11 @@ function hapiServerWrapper(wrappedFunction) {
         if (server.route) {
             shimmer.wrap(server, 'route', hapiRouteWrapper);
         }
+        // eslint-disable-next-line no-underscore-dangle
+        if (server._clone) {
+            shimmer.wrap(server, '_clone', hapiCloneWrapper);
+        }
         return server;
-    };
-}
-
-
-/**
- * Wraps the @hapi/hapi module route rebuild function with tracing
- * @param {Function} wrappedFunction Hapi init function
- * @return {Function} updated wrapped init
- */
-function hapiRebuildWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
-    return function internalHapiRebuildWrapper() {
-        const handler = wrappedFunction.apply(this);
-        const originalHandler = this.settings.handler;
-        // Changing the original handler to the middleware
-        // eslint-disable-next-line no-param-reassign
-        this.settings.handler = (request, h) => traceContext.RunInContext(
-            tracer.createTracer,
-            () => hapiMiddleware(request, h, originalHandler)
-        );
-        return handler;
     };
 }
 
@@ -159,10 +168,9 @@ module.exports = {
      */
     init() {
         moduleUtils.patchModule(
-            '@hapi/hapi/lib/route.js',
-            'rebuild',
-            hapiRebuildWrapper,
-            hapi => hapi.prototype
+            '@hapi/hapi',
+            'server',
+            hapiServerWrapper
         );
         moduleUtils.patchModule(
             'hapi',

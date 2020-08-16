@@ -11,8 +11,8 @@ const {
 const traceContext = require('../trace_context.js');
 
 /**
- * @param {Socket} socket received message.
- * @return {string} socket address
+ * @param {Socket} socket socket object.
+ * @return {string} socket address.
  */
 const getWebsocketAddress = socket => (socket ? socket.localAddress : 'websocket');
 

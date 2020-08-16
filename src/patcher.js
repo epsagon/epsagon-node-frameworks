@@ -14,6 +14,7 @@ const amqplibPatcher = require('./wrappers/amqplib.js');
 const bunnybusPatcher = require('./wrappers/bunnybus.js');
 const superagentPatcher = require('./events/superagent.js');
 const superagentWrapperPatcher = require('./events/superagent-wrapper.js');
+const wsPatcher = require('./wrappers/ws.js');
 
 
 /**
@@ -44,5 +45,6 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
         bunnybusPatcher,
         superagentPatcher,
         superagentWrapperPatcher,
+        wsPatcher,
     ].forEach(patch);
 }

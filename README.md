@@ -416,7 +416,7 @@ epsagon.init({
 Tagging traces or setting custom errors can be by:
 
 ```javascript
-socket.on('message',  (message) =>{
+socket.on('message', (message) => {
     message.epsagon.label('key', 'value');
     message.epsagon.setError(Error('My custom error'));
 }) 

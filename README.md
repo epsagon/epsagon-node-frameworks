@@ -131,8 +131,7 @@ epsagon.ignoreEndpoints(['/healthcheck'])
 
 ## Frameworks
 
-The following frameworks are supported by Epsagon.
-Some require installing also [`epsagon-frameworks`](https://github.com/epsagon/epsagon-node-frameworks)
+The following frameworks are supported by Epsagon Frameworks.
 
 |Framework                               |Supported Version          |Epsagon Library                                    |Auto-tracing Supported                               |
 |----------------------------------------|---------------------------|---------------------------------------------------|-----------------------------------------------------|
@@ -145,6 +144,7 @@ Some require installing also [`epsagon-frameworks`](https://github.com/epsagon/e
 |[amqplib](#amqplib)                     |`>=0.5.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[bunnybus](#bunnybus)                   |`>=7.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[NATS](#nats)                           |`>=1.4.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[WS (Websocket)](#ws)                   |`>=7.3.1`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Generic](#generic)                     |All                        |`epsagon`                                          |<ul><li>- [ ] </li></ul>                             |
 
 
@@ -395,6 +395,32 @@ epsagon.init({
 });
 ```
 
+### WS (Websocket)
+
+Tracing `ws` consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+socket.on('message',  (message) =>{
+    message.epsagon.label('key', 'value');
+    message.epsagon.setError(Error('My custom error'));
+}) 
+```
 
 ### Generic
 
@@ -440,6 +466,7 @@ Epsagon provides out-of-the-box instrumentation (tracing) for many popular frame
 |mqtt                |`>=2.13.1`                 |
 |nats                |`>=1.4.0`                  |
 |openwhisk           |`>=3.0.0`                  |
+|ws                  |`>=7.3.1`                  |
 
 
 ## Configuration

@@ -7,6 +7,7 @@ const {
     moduleUtils,
     eventInterface,
     utils,
+    sqsUtils,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 
@@ -40,6 +41,10 @@ function sqsConsumerMiddleware(message, app) {
             message_body: message.Body,
             message_attributed: message.MessageAttributes,
         });
+        const snsData = sqsUtils.getSNSTrigger([message]);
+        if (snsData != null) {
+            eventInterface.addToMetadata(sqsEvent, { 'SNS Trigger': snsData });
+        }
 
         const { label, setError } = tracer;
         // eslint-disable-next-line no-param-reassign

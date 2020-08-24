@@ -12,18 +12,42 @@ const {
 const traceContext = require('../trace_context.js');
 
 /**
+ * Parse queue URL into name, account and region
+ * @param {String} queueUrl queue URL.
+ * @return {object} { queueName, awsAccount, region }.
+ */
+function parseQueueUrl(queueUrl) {
+    let queueName = '';
+    let awsAccount = '';
+    let region = '';
+    if (queueUrl.startsWith('https://vpce')) {
+        // eslint-disable-next-line no-unused-vars
+        const [_, __, awsPath, parsedQueueName] = queueUrl.split('/');
+        // eslint-disable-next-line prefer-destructuring
+        region = awsPath.split('.')[2];
+        queueName = parsedQueueName;
+    } else {
+        // eslint-disable-next-line no-unused-vars
+        const [_, __, awsPath, parsedAccount, parsedQueueName] = queueUrl.split('/');
+        queueName = parsedQueueName;
+        awsAccount = parsedAccount;
+        // eslint-disable-next-line prefer-destructuring
+        region = awsPath.split('.')[1];
+    }
+    return { queueName, awsAccount, region };
+}
+
+/**
  * Handle consumer event from sqs
  * @param {SQSMessage} message received message.
  * @param {object} app consumer app.
  */
 function sqsConsumerMiddleware(message, app) {
-    // eslint-disable-next-line no-unused-vars
-    const [_, __, awsPath, awsAccount, queueName] = app.queueUrl.split('/');
-    const region = awsPath.split('.')[1];
     let originalHandlerSyncErr;
     try {
         // Initialize tracer and runner.
         tracer.restart();
+        const { queueName, awsAccount, region } = parseQueueUrl(app.queueUrl);
         const { slsEvent: sqsEvent, startTime: sqsStartTime } =
         eventInterface.initializeEvent(
             'sqs',

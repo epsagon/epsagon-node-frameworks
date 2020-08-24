@@ -20,6 +20,7 @@ const { ignoredEndpoints } = require('../http.js');
  */
 function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
+    utils.debugLog('Epsagon Express - starting express middleware');
     if (ignoredEndpoints().includes(req.originalUrl)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
         next();
@@ -31,24 +32,33 @@ function expressMiddleware(req, res, next) {
     const startTime = Date.now();
     try {
         expressEvent = expressRunner.createRunner(req, startTime);
+        utils.debugLog('Epsagon Express - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
+            utils.debugLog('Epsagon Express - creating response promise');
             res.once('finish', function handleResponse() {
+                utils.debugLog('Epsagon Express - got finish event, handling response');
                 if (
                     ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
                     (!req.route)
                 ) {
+                    utils.debugLog('Epsagon Express - req.route not set - not reporting trace');
                     return;
                 }
                 try {
                     expressRunner.finishRunner(expressEvent, this, req, startTime);
+                    utils.debugLog('Epsagon Express - finished runner');
                 } catch (err) {
                     tracer.addException(err);
                 }
-                tracer.sendTrace(() => {}).then(resolve);
+                utils.debugLog('Epsagon Express - sending trace');
+                tracer.sendTrace(() => {}).then(resolve).then(() => {
+                    utils.debugLog('Epsagon Express - trace sent + request resolved');
+                });
             });
         });
         tracer.addRunner(expressEvent, requestPromise);
+        utils.debugLog('Epsagon Express - added runner');
 
         // Inject trace functions
         const { label, setError } = tracer;
@@ -57,8 +67,10 @@ function expressMiddleware(req, res, next) {
             setError,
         };
     } catch (err) {
+        utils.debugLog('Epsagon Express - general catch');
         utils.debugLog(err);
     } finally {
+        utils.debugLog('Epsagon Express - general finally');
         next();
     }
 }
@@ -70,10 +82,13 @@ function expressMiddleware(req, res, next) {
  * @return {Function} updated wrapped init
  */
 function expressWrapper(wrappedFunction) {
+    utils.debugLog('Epsagon Express - wrapping express');
     traceContext.init();
     tracer.getTrace = traceContext.get;
     return function internalExpressWrapper() {
+        utils.debugLog('Epsagon Express - express app created');
         const result = wrappedFunction.apply(this, arguments);
+        utils.debugLog('Epsagon Express - called the original function');
         this.use(
             (req, res, next) => traceContext.RunInContext(
                 tracer.createTracer,

@@ -43,11 +43,13 @@ function parseQueueUrl(queueUrl) {
  * @param {object} app consumer app.
  */
 function sqsConsumerMiddleware(message, app) {
+    utils.debugLog('Epsagon SQS - starting middleware');
     let originalHandlerSyncErr;
     try {
         // Initialize tracer and runner.
         tracer.restart();
         const { queueName, awsAccount, region } = parseQueueUrl(app.queueUrl);
+        utils.debugLog('Epsagon SQS - parsed queue url', queueName, awsAccount, region);
         const { slsEvent: sqsEvent, startTime: sqsStartTime } =
         eventInterface.initializeEvent(
             'sqs',
@@ -65,8 +67,10 @@ function sqsConsumerMiddleware(message, app) {
             message_body: message.Body,
             message_attributed: message.MessageAttributes,
         });
+        utils.debugLog('Epsagon SQS - created sqs event');
         const snsData = sqsUtils.getSNSTrigger([message]);
         if (snsData != null) {
+            utils.debugLog('Epsagon SQS - created sns event');
             eventInterface.addToMetadata(sqsEvent, { 'SNS Trigger': snsData });
         }
 
@@ -79,38 +83,58 @@ function sqsConsumerMiddleware(message, app) {
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'
         );
+        utils.debugLog('Epsagon SQS - initialized runner event');
         let runnerResult;
         try {
             runnerResult = app.originalHandleMessage(message);
+            utils.debugLog('Epsagon SQS - executed original handler');
         } catch (err) {
+            utils.debugLog('Epsagon SQS - error in original handler');
             originalHandlerSyncErr = err;
         }
 
         if (app.originalHandleMessage.name) {
+            utils.debugLog('Epsagon SQS - set handler name');
             nodeEvent.getResource().setName(app.originalHandleMessage.name);
         }
 
         // Handle and finalize async user function.
         if (utils.isPromise(runnerResult)) {
+            utils.debugLog('Epsagon SQS - result is promise');
             let originalHandlerAsyncError;
             runnerResult.catch((err) => {
+                utils.debugLog('Epsagon SQS - original handler threw error');
                 originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {
+                utils.debugLog('Epsagon SQS - finalizing event');
                 eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
-                tracer.sendTrace(() => {});
+                utils.debugLog('Epsagon SQS - sending trace');
+                tracer.sendTrace(() => {}).then(() => {
+                    utils.debugLog('Epsagon SQS - trace sent');
+                });
+                utils.debugLog('Epsagon SQS - post send');
             });
         } else {
             // Finalize sync user function.
+            utils.debugLog('Epsagon SQS - response not promise');
+            utils.debugLog('Epsagon SQS - finalizing event');
             eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
-            tracer.sendTrace(() => {});
+            utils.debugLog('Epsagon SQS - sending trace');
+            tracer.sendTrace(() => {}).then(() => {
+                utils.debugLog('Epsagon SQS - trace sent');
+            });
+            utils.debugLog('Epsagon SQS - post send');
         }
         tracer.addRunner(nodeEvent, runnerResult);
+        utils.debugLog('Epsagon SQS - added runner');
     } catch (err) {
+        utils.debugLog('Epsagon SQS - general error', err);
         tracer.addException(err);
     }
     // Throwing error in case of sync user function.
     if (originalHandlerSyncErr) {
+        utils.debugLog('Epsagon SQS - rethrowing original sync error');
         throw originalHandlerSyncErr;
     }
 }

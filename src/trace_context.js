@@ -42,6 +42,17 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 
 
 /**
+ * Creates a reference to another asyncId
+ * @param {Number} asyncId sets the reference to this asyncId
+ */
+function setAsyncReference(asyncId) {
+    if (!tracers[asyncId]) return;
+    tracers[asyncHooks.executionAsyncId()] = tracers[asyncId];
+    tracers[asyncHooks.triggerAsyncId()] = tracers[asyncId];
+}
+
+
+/**
  * Creates an active context for tracer and run the handle
  * @param {Function} createTracer create a tracer object
  * @param {Function} handle function to run the context in
@@ -80,5 +91,6 @@ function init() {
 module.exports = {
     get,
     init,
+    setAsyncReference,
     RunInContext,
 };

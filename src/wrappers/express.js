@@ -115,9 +115,10 @@ function expressWrapper(wrappedFunction) {
         this.use(
             (req, res, next) => {
                 traceContext.RunInContext(
-                tracer.createTracer,
-                () => expressMiddleware(req, res, nextWrapper(req, next))
-            )}
+                    tracer.createTracer,
+                    () => expressMiddleware(req, res, nextWrapper(req, next))
+                );
+            }
         );
         return result;
     };

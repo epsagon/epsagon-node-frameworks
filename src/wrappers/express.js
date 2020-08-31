@@ -3,7 +3,7 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
-const uuid4 = require('uuid4');
+const async_hooks = require('async_hooks');
 const {
     tracer,
     utils,
@@ -31,10 +31,7 @@ function expressMiddleware(req, res, next) {
     tracer.restart();
     let expressEvent;
     const startTime = Date.now();
-    const epsagonIdentifier = uuid4();
     try {
-        // Add epsagon id to
-        req.epsagonId = epsagonIdentifier;
         expressEvent = expressRunner.createRunner(req, startTime);
         utils.debugLog('Epsagon Express - created runner');
         // Handle response
@@ -56,7 +53,7 @@ function expressMiddleware(req, res, next) {
                     tracer.addException(err);
                 }
                 utils.debugLog('Epsagon Express - sending trace');
-                tracer.sendTrace(() => {}, req.epsagonId).then(resolve).then(() => {
+                tracer.sendTrace(() => {}).then(resolve).then(() => {
                     utils.debugLog('Epsagon Express - trace sent + request resolved');
                 });
             });
@@ -81,21 +78,48 @@ function expressMiddleware(req, res, next) {
 
 /**
  * Wraps express next function that calls next middleware
- * @param {*} req express request
  * @param {*} next express next middleware
  * @returns {*} wrapeed function
  */
-function nextWrapper(req, next) {
+function nextWrapper(next) {
+    const asyncId = async_hooks.executionAsyncId()
     const originalNext = next;
     return function internalNextWrapper(error) {
         if (error) {
-            utils.debugLog('Epsagon Next - middleware executed');
-            utils.debugLog(error);
+            utils$3.debugLog('Epsagon Next - middleware executed');
+            utils$3.debugLog(error);
         }
-        traceContext.setTraceToEpsagonId(req.epsagonId);
+
+        traceContext.setAsyncReference(asyncId);
         originalNext(...arguments);
-        traceContext.setTraceToEpsagonId(req.epsagonId);
+        traceContext.setAsyncReference(asyncId);
     };
+}
+
+/**
+ * Wrapts clients middleware
+ * @param {*} middleware - middleware to wrap
+ * @returns wrapped middleware
+ */
+function middlewareWrapper(middleware) {
+    return function internalMiddlewareWrapper(req, res, next) {
+        return middleware(req, res, nextWrapper(next))
+    }
+}
+
+/**
+ * Wraps express use function
+ * @param {*} original - original use function
+ * @returns {function} - wrapped use function
+ */
+function useWrapper(original) {
+    return function internalUseWrapper() {
+        // Check if we have middleware
+        if(arguments[1]) {
+            arguments[1] = middlewareWrapper(arguments[1])
+        }
+        return original.apply(this, arguments)
+    }
 }
 
 
@@ -116,7 +140,7 @@ function expressWrapper(wrappedFunction) {
             (req, res, next) => {
                 traceContext.RunInContext(
                     tracer.createTracer,
-                    () => expressMiddleware(req, res, nextWrapper(req, next))
+                    () => expressMiddleware(req, res, next)
                 );
             }
         );
@@ -135,6 +159,12 @@ module.exports = {
             'init',
             expressWrapper,
             express => express.application
+        );
+        moduleUtils.patchModule(
+            'express',
+            'use',
+            useWrapper,
+            express => express.Router
         );
     },
 };

@@ -22,9 +22,11 @@ const { EPSAGON_HEADER } = require('../http.js');
 function amqplibSubscriberMiddleware(message, callback, channel) {
     let originalHandlerSyncErr;
     let runnerResult;
+    let nodeEvent;
+    let nodeStartTime;
     try {
         if (message.properties.headers.bunnyBus) {
-            utils.debugLog('Skipping BunnyBus messages');
+            utils.debugLog('[amqplib] Skipping BunnyBus messages');
             return callback(message);
         }
 
@@ -37,6 +39,7 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
             'consume',
             'trigger'
         );
+        utils.debugLog('[amqplib] Done initializing event');
 
         const metadata = {
             exchange: message.fields.exchange,
@@ -49,6 +52,7 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
         }
 
         tracer.addEvent(amqpEvent);
+        utils.debugLog('[amqplib] Event added');
         eventInterface.finalizeEvent(amqpEvent, amqpStartTime, null, metadata, {
             headers: message.properties.headers,
             message: message.content.toString(),
@@ -61,39 +65,63 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
             setError,
         };
         const runnerName = callback && callback.name ? callback.name : `${message.fields.routingKey}-consumer`;
-        const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
+        const { slsEvent, startTime } = eventInterface.initializeEvent(
             'node_function', runnerName, 'execute', 'runner'
         );
-
-        try {
-            runnerResult = callback(message);
-        } catch (err) {
-            originalHandlerSyncErr = err;
-        }
-
-        // Handle and finalize async user function.
-        if (utils.isPromise(runnerResult)) {
-            let originalHandlerAsyncError;
-            runnerResult = runnerResult.catch((err) => {
-                originalHandlerAsyncError = err;
-                throw err;
-            }).finally(() => {
-                eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
-                tracer.sendTrace(() => {});
-            });
-        } else {
-            // Finalize sync user function.
-            eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
-            tracer.sendTrace(() => {});
-        }
-        tracer.addRunner(nodeEvent, runnerResult);
+        nodeEvent = slsEvent;
+        nodeStartTime = startTime;
+        utils.debugLog('[amqplib] Runner initialized');
     } catch (err) {
+        utils.debugLog('[amqplib] Exception initializing');
+        tracer.addException(err);
+    }
+
+    try {
+        runnerResult = callback(message);
+        utils.debugLog('[amqplib] Original runner ran');
+    } catch (err) {
+        utils.debugLog('[amqplib] Original runner got an error');
+        originalHandlerSyncErr = err;
+    }
+
+    try {
+        if (nodeEvent) {
+            // Handle and finalize async user function.
+            if (utils.isPromise(runnerResult)) {
+                utils.debugLog('[amqplib] Original runner is a promise');
+                let originalHandlerAsyncError;
+                runnerResult = runnerResult.catch((err) => {
+                    utils.debugLog('[amqplib] Original runner in catch');
+                    originalHandlerAsyncError = err;
+                    throw err;
+                }).finally(() => {
+                    utils.debugLog('[amqplib] Original runner in finally');
+                    eventInterface.finalizeEvent(
+                        nodeEvent,
+                        nodeStartTime,
+                        originalHandlerAsyncError
+                    );
+                    tracer.sendTrace(() => {});
+                    utils.debugLog('[amqplib] Trace sent');
+                });
+            } else {
+                // Finalize sync user function.
+                utils.debugLog('[amqplib] Original runner is not a promise');
+                eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
+                tracer.sendTrace(() => {});
+            }
+            utils.debugLog('[amqplib] Runner added');
+            tracer.addRunner(nodeEvent, runnerResult);
+        }
+    } catch (err) {
+        utils.debugLog('[amqplib] Exception adding runner');
         tracer.addException(err);
     }
     // Throwing error in case of sync user function.
     if (originalHandlerSyncErr) {
         throw originalHandlerSyncErr;
     }
+    utils.debugLog('[amqplib] Return result');
     return runnerResult;
 }
 

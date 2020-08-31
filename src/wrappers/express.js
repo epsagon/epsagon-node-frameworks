@@ -3,7 +3,7 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
-const async_hooks = require('async_hooks');
+const asyncHooks = require('async_hooks');
 const {
     tracer,
     utils,
@@ -82,12 +82,12 @@ function expressMiddleware(req, res, next) {
  * @returns {*} wrapeed function
  */
 function nextWrapper(next) {
-    const asyncId = async_hooks.executionAsyncId()
+    const asyncId = asyncHooks.executionAsyncId();
     const originalNext = next;
     return function internalNextWrapper(error) {
         if (error) {
-            utils$3.debugLog('Epsagon Next - middleware executed');
-            utils$3.debugLog(error);
+            utils.debugLog('Epsagon Next - middleware executed');
+            utils.debugLog(error);
         }
 
         traceContext.setAsyncReference(asyncId);
@@ -99,12 +99,12 @@ function nextWrapper(next) {
 /**
  * Wrapts clients middleware
  * @param {*} middleware - middleware to wrap
- * @returns wrapped middleware
+ * @returns {function} wrapped middleware
  */
 function middlewareWrapper(middleware) {
     return function internalMiddlewareWrapper(req, res, next) {
-        return middleware(req, res, nextWrapper(next))
-    }
+        return middleware(req, res, nextWrapper(next));
+    };
 }
 
 /**
@@ -115,11 +115,11 @@ function middlewareWrapper(middleware) {
 function useWrapper(original) {
     return function internalUseWrapper() {
         // Check if we have middleware
-        if(arguments[1]) {
-            arguments[1] = middlewareWrapper(arguments[1])
+        if (arguments[1]) {
+            arguments[1] = middlewareWrapper(arguments[1]);
         }
-        return original.apply(this, arguments)
-    }
+        return original.apply(this, arguments);
+    };
 }
 
 

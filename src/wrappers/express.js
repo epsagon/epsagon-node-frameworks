@@ -35,7 +35,6 @@ function expressMiddleware(req, res, next) {
     try {
         // Add epsagon id to
         req.epsagonId = epsagonIdentifier;
-        tracer.getTrace = () => traceContext.get(epsagonIdentifier);
         expressEvent = expressRunner.createRunner(req, startTime);
         utils.debugLog('Epsagon Express - created runner');
         // Handle response
@@ -57,7 +56,7 @@ function expressMiddleware(req, res, next) {
                     tracer.addException(err);
                 }
                 utils.debugLog('Epsagon Express - sending trace');
-                tracer.sendTrace(() => {}).then(resolve).then(() => {
+                tracer.sendTrace(() => {}, req.epsagonId).then(resolve).then(() => {
                     utils.debugLog('Epsagon Express - trace sent + request resolved');
                 });
             });
@@ -114,10 +113,11 @@ function expressWrapper(wrappedFunction) {
         const result = wrappedFunction.apply(this, arguments);
         utils.debugLog('Epsagon Express - called the original function');
         this.use(
-            (req, res, next) => traceContext.RunInContext(
+            (req, res, next) => {
+                traceContext.RunInContext(
                 tracer.createTracer,
                 () => expressMiddleware(req, res, nextWrapper(req, next))
-            )
+            )}
         );
         return result;
     };

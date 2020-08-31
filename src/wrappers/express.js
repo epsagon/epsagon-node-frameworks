@@ -3,7 +3,7 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
-const uuid4 = require('uuid4')
+const uuid4 = require('uuid4');
 const {
     tracer,
     utils,
@@ -33,11 +33,9 @@ function expressMiddleware(req, res, next) {
     const startTime = Date.now();
     const epsagonIdentifier = uuid4();
     try {
-        // Add epsagon id to 
-        req._epsagon_id = epsagonIdentifier
-        tracer.getTrace = () => {
-            return traceContext.get(epsagonIdentifier)
-        }
+        // Add epsagon id to
+        req.epsagonId = epsagonIdentifier;
+        tracer.getTrace = () => traceContext.get(epsagonIdentifier);
         expressEvent = expressRunner.createRunner(req, startTime);
         utils.debugLog('Epsagon Express - created runner');
         // Handle response
@@ -83,22 +81,22 @@ function expressMiddleware(req, res, next) {
 }
 
 /**
- * 
- * @param {*} req 
- * @param {*} next 
+ * Wraps express next function that calls next middleware
+ * @param {*} req express request
+ * @param {*} next express next middleware
+ * @returns {*} wrapeed function
  */
-function wrapNext (req, next) {
-   const originalNext = next
-
-  return function (error) {
-    if (error) {
-        utils.debugLog('Epsagon Next - middleware executed');
-        utils.debugLog(error);
-    }
-    traceContext.setTraceToEpsagonId(req._epsagon_id)
-    originalNext.apply(null, arguments)
-    traceContext.setTraceToEpsagonId(req._epsagon_id)
-  }
+function nextWrapper(req, next) {
+    const originalNext = next;
+    return function internalNextWrapper(error) {
+        if (error) {
+            utils.debugLog('Epsagon Next - middleware executed');
+            utils.debugLog(error);
+        }
+        traceContext.setTraceToEpsagonId(req.epsagonId);
+        originalNext(...arguments);
+        traceContext.setTraceToEpsagonId(req.epsagonId);
+    };
 }
 
 
@@ -118,7 +116,7 @@ function expressWrapper(wrappedFunction) {
         this.use(
             (req, res, next) => traceContext.RunInContext(
                 tracer.createTracer,
-                () => expressMiddleware(req, res, wrapNext(req, next))
+                () => expressMiddleware(req, res, nextWrapper(req, next))
             )
         );
         return result;

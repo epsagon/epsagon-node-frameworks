@@ -53,15 +53,6 @@ function setAsyncReference(asyncId) {
 
 
 /**
- * Creates a reference to epsagonIdentifier
- * @param {Number} epsagonIdentifier sets the reference to this epsagonIdentifier
- */
-function setTraceToEpsagonId(epsagonIdentifier) {
-    tracers[epsagonIdentifier] = get(epsagonIdentifier)
-}
-
-
-/**
  * Creates an active context for tracer and run the handle
  * @param {Function} createTracer create a tracer object
  * @param {Function} handle function to run the context in
@@ -77,16 +68,25 @@ function RunInContext(createTracer, handle) {
 
 
 /**
- * Returns the active trace
- * @return {Object} tracer object
+ * Gets trace reference from executionAsyncId or from epsagonIdentifier.
+ * @param {*} epsagonIdentifier gets the reference from epsagonIdentifier
+ * @returns {*} trace reference
  */
 function get(epsagonIdentifier) {
     if (tracers[asyncHooks.executionAsyncId()]) {
-        return tracers[asyncHooks.executionAsyncId()]
-    } else if (epsagonIdentifier) {
-        return tracers[epsagonIdentifier]
+        return tracers[asyncHooks.executionAsyncId()];
+    } if (epsagonIdentifier) {
+        return tracers[epsagonIdentifier];
     }
     return null;
+}
+
+/**
+ * Creates a reference to epsagonIdentifier
+ * @param {Number} epsagonIdentifier sets the reference to this epsagonIdentifier
+ */
+function setTraceToEpsagonId(epsagonIdentifier) {
+    tracers[epsagonIdentifier] = get(epsagonIdentifier);
 }
 
 /**
@@ -107,5 +107,5 @@ module.exports = {
     init,
     setAsyncReference,
     RunInContext,
-    setTraceToEpsagonId
+    setTraceToEpsagonId,
 };

@@ -3,6 +3,7 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
+const uuid4 = require('uuid4')
 const {
     tracer,
     utils,
@@ -30,7 +31,13 @@ function expressMiddleware(req, res, next) {
     tracer.restart();
     let expressEvent;
     const startTime = Date.now();
+    const epsagonIdentifier = uuid4();
     try {
+        // Add epsagon id to 
+        req._epsagon_id = epsagonIdentifier
+        tracer.getTrace = () => {
+            return traceContext.get(epsagonIdentifier)
+        }
         expressEvent = expressRunner.createRunner(req, startTime);
         utils.debugLog('Epsagon Express - created runner');
         // Handle response
@@ -75,6 +82,25 @@ function expressMiddleware(req, res, next) {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} next 
+ */
+function wrapNext (req, next) {
+   const originalNext = next
+
+  return function (error) {
+    if (error) {
+        utils.debugLog('Epsagon Next - middleware executed');
+        utils.debugLog(error);
+    }
+    traceContext.setTraceToEpsagonId(req._epsagon_id)
+    originalNext.apply(null, arguments)
+    traceContext.setTraceToEpsagonId(req._epsagon_id)
+  }
+}
+
 
 /**
  * Wraps the Express module request function with tracing
@@ -92,7 +118,7 @@ function expressWrapper(wrappedFunction) {
         this.use(
             (req, res, next) => traceContext.RunInContext(
                 tracer.createTracer,
-                () => expressMiddleware(req, res, next)
+                () => expressMiddleware(req, res, wrapNext(req, next))
             )
         );
         return result;

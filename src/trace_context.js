@@ -53,6 +53,15 @@ function setAsyncReference(asyncId) {
 
 
 /**
+ * Creates a reference to epsagonIdentifier
+ * @param {Number} epsagonIdentifier sets the reference to this epsagonIdentifier
+ */
+function setTraceToEpsagonId(epsagonIdentifier) {
+    tracers[epsagonIdentifier] = get(epsagonIdentifier)
+}
+
+
+/**
  * Creates an active context for tracer and run the handle
  * @param {Function} createTracer create a tracer object
  * @param {Function} handle function to run the context in
@@ -71,8 +80,13 @@ function RunInContext(createTracer, handle) {
  * Returns the active trace
  * @return {Object} tracer object
  */
-function get() {
-    return tracers[asyncHooks.executionAsyncId()] || null;
+function get(epsagonIdentifier) {
+    if (tracers[asyncHooks.executionAsyncId()]) {
+        return tracers[asyncHooks.executionAsyncId()]
+    } else if (epsagonIdentifier) {
+        return tracers[epsagonIdentifier]
+    }
+    return null;
 }
 
 /**
@@ -93,4 +107,5 @@ module.exports = {
     init,
     setAsyncReference,
     RunInContext,
+    setTraceToEpsagonId
 };

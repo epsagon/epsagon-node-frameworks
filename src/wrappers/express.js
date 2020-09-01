@@ -137,13 +137,10 @@ function expressWrapper(wrappedFunction) {
         const result = wrappedFunction.apply(this, arguments);
         utils.debugLog('Epsagon Express - called the original function');
         this.use(
-            (req, res, next) => {
-                traceContext.RunInContext(
-                    tracer.createTracer,
-                    () => expressMiddleware(req, res, next)
-                );
-            }
-        );
+            (req, res, next) => traceContext.RunInContext(
+                tracer.createTracer,
+                () => expressMiddleware(req, res, next)
+            ))
         return result;
     };
 }

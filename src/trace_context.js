@@ -82,14 +82,6 @@ function get(epsagonIdentifier) {
 }
 
 /**
- * Creates a reference to epsagonIdentifier
- * @param {Number} epsagonIdentifier sets the reference to this epsagonIdentifier
- */
-function setTraceToEpsagonId(epsagonIdentifier) {
-    tracers[epsagonIdentifier] = get(epsagonIdentifier);
-}
-
-/**
  * Initialize context namespace
  */
 function init() {
@@ -107,5 +99,4 @@ module.exports = {
     init,
     setAsyncReference,
     RunInContext,
-    setTraceToEpsagonId,
 };

@@ -3,6 +3,7 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
+const asyncHooks = require('async_hooks');
 const {
     tracer,
     utils,
@@ -75,6 +76,52 @@ function expressMiddleware(req, res, next) {
     }
 }
 
+/**
+ * Wraps express next function that calls next middleware
+ * @param {*} next express next middleware
+ * @returns {*} wrapeed function
+ */
+function nextWrapper(next) {
+    const asyncId = asyncHooks.executionAsyncId();
+    const originalNext = next;
+    return function internalNextWrapper(error) {
+        if (error) {
+            utils.debugLog('Epsagon Next - middleware executed');
+            utils.debugLog(error);
+        }
+
+        traceContext.setAsyncReference(asyncId);
+        originalNext(...arguments);
+        traceContext.setAsyncReference(asyncId);
+    };
+}
+
+/**
+ * Wrapts clients middleware
+ * @param {*} middleware - middleware to wrap
+ * @returns {function} wrapped middleware
+ */
+function middlewareWrapper(middleware) {
+    return function internalMiddlewareWrapper(req, res, next) {
+        return middleware(req, res, nextWrapper(next));
+    };
+}
+
+/**
+ * Wraps express use function
+ * @param {*} original - original use function
+ * @returns {function} - wrapped use function
+ */
+function useWrapper(original) {
+    return function internalUseWrapper() {
+        // Check if we have middleware
+        if (arguments[1]) {
+            arguments[1] = middlewareWrapper(arguments[1]);
+        }
+        return original.apply(this, arguments);
+    };
+}
+
 
 /**
  * Wraps the Express module request function with tracing
@@ -110,6 +157,12 @@ module.exports = {
             'init',
             expressWrapper,
             express => express.application
+        );
+        moduleUtils.patchModule(
+            'express',
+            'use',
+            useWrapper,
+            express => express.Router
         );
     },
 };

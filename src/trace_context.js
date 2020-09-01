@@ -66,7 +66,6 @@ function RunInContext(createTracer, handle) {
     return handle();
 }
 
-
 /**
  * Returns the active trace
  * @return {Object} tracer object

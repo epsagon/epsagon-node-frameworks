@@ -140,7 +140,8 @@ function expressWrapper(wrappedFunction) {
             (req, res, next) => traceContext.RunInContext(
                 tracer.createTracer,
                 () => expressMiddleware(req, res, next)
-            ))
+            )
+        );
         return result;
     };
 }

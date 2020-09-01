@@ -66,19 +66,12 @@ function RunInContext(createTracer, handle) {
     return handle();
 }
 
-
 /**
- * Gets trace reference from executionAsyncId or from epsagonIdentifier.
- * @param {*} epsagonIdentifier gets the reference from epsagonIdentifier
- * @returns {*} trace reference
+ * Returns the active trace
+ * @return {Object} tracer object
  */
-function get(epsagonIdentifier) {
-    if (tracers[asyncHooks.executionAsyncId()]) {
-        return tracers[asyncHooks.executionAsyncId()];
-    } if (epsagonIdentifier) {
-        return tracers[epsagonIdentifier];
-    }
-    return null;
+function get() {
+    return tracers[asyncHooks.executionAsyncId()] || null;
 }
 
 /**

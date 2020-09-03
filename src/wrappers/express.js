@@ -140,7 +140,7 @@ function middlewareWrapper(middleware) {
 function useWrapper(original) {
     return function internalUseWrapper() {
         // Check if we have middleware
-        if (arguments.length > 1) {
+        if (arguments.length > 1 && arguments[1] && typeof arguments[1] === "function") {
             arguments[1] = middlewareWrapper(arguments[1]);
         }
         return original.apply(this, arguments);

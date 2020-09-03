@@ -85,16 +85,33 @@ function nextWrapper(next) {
     const asyncId = asyncHooks.executionAsyncId();
     const originalNext = next;
     return function internalNextWrapper(error) {
+        utils.debugLog('Epsagon Next - middleware executed');
+
         if (error) {
-            utils.debugLog('Epsagon Next - middleware executed');
             utils.debugLog(error);
         }
 
         traceContext.setAsyncReference(asyncId);
-        originalNext(...arguments);
+        const result = originalNext(...arguments);
         traceContext.setAsyncReference(asyncId);
+        return result;
     };
 }
+/**
+ * Wraps next with next wrapper.
+ * @param {*} args - list of arguments
+ * @return {*} - list of arguments with wrapped next function
+ */
+function getWrappedNext(args) {
+    const copyArgs = [...args];
+    const next = copyArgs[copyArgs.length - 1];
+    if (next && next.name === 'next') {
+        copyArgs[copyArgs.length - 1] = nextWrapper(args[args.length - 1]);
+    }
+
+    return copyArgs;
+}
+
 
 /**
  * Wrapts clients middleware
@@ -102,9 +119,17 @@ function nextWrapper(next) {
  * @returns {function} wrapped middleware
  */
 function middlewareWrapper(middleware) {
+    /* eslint-disable no-unused-vars */
+    // length checks function argument quantity
+    if (middleware.length === 4) {
+        return function internalMiddlewareWrapper(error, req, res, next) {
+            return middleware.apply(this, getWrappedNext(arguments));
+        };
+    }
     return function internalMiddlewareWrapper(req, res, next) {
-        return middleware(req, res, nextWrapper(next));
+        return middleware.apply(this, getWrappedNext(arguments));
     };
+    /* eslint-enable no-unused-vars */
 }
 
 /**
@@ -115,7 +140,7 @@ function middlewareWrapper(middleware) {
 function useWrapper(original) {
     return function internalUseWrapper() {
         // Check if we have middleware
-        if (arguments[1]) {
+        if (arguments.length > 1 && arguments[1] && typeof arguments[1] === 'function') {
             arguments[1] = middlewareWrapper(arguments[1]);
         }
         return original.apply(this, arguments);

@@ -142,6 +142,7 @@ The following frameworks are supported by Epsagon Frameworks.
 |[PubSub](#pubsub)                       |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[SQS Consumer](#sqs-consumer)           |`>=4.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[amqplib](#amqplib)                     |`>=0.5.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[amqp](#amqp)                           |`>=0.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[bunnybus](#bunnybus)                   |`>=7.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[NATS](#nats)                           |`>=1.4.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[WS (Websocket)](#ws)                   |`>=7.3.1`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
@@ -348,6 +349,34 @@ ch.consume(q, function cons(msg) {
 });
 ```
 
+### amqp
+
+Tracing amqp consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+q.subscribe(function (message) {
+  message.epsagon.label('key', 'value');
+  message.epsagon.setError(Error('My custom error'));
+  console.log(message);
+});
+```
+
 ### bunnybus
 
 Tracing bunnybus consumers can be done in two methods:
@@ -461,11 +490,16 @@ Epsagon provides out-of-the-box instrumentation (tracing) for many popular frame
 |pg                  |`>=4`                      |
 |mongodb             |`>=3.0.0`                  |
 |kafkajs             |`>=1.2.0`                  |
+|amqplib             |`>=0.5.0`                  |
+|amqp                |`>=0.2.0`                  |
 |redis               |`>=0.12.1`                 |
 |ioredis             |`>=4.0.0`                  |
 |mqtt                |`>=2.13.1`                 |
 |nats                |`>=1.4.0`                  |
 |openwhisk           |`>=3.0.0`                  |
+|@azure/cosmos       |`>=3.7.5`                  |
+|@azure/storage-blob |`>=12.2.0`                 |
+|ldapjs              |`>=2.1.0`                  |
 |ws                  |`>=7.3.1`                  |
 
 

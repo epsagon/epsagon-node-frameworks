@@ -139,7 +139,7 @@ function middlewareWrapper(middleware) {
  * @returns {function} - wrapped http method function
  */
 function methodWrapper(original) {
-    return function internalMethodWrapperWrapper() {
+    return function internalMethodWrapper() {
         // Check if we have middlewares
         for (let i = 0; i < arguments.length - 1; i += 1) {
             if (arguments[i] && typeof arguments[i] === 'function') {

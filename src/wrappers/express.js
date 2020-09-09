@@ -12,6 +12,7 @@ const {
 const traceContext = require('../trace_context.js');
 const expressRunner = require('../runners/express.js');
 const { shouldIgnore } = require('../http.js');
+const { methods } = require('../consts');
 
 /**
  * Express requests middleware that runs in context
@@ -134,6 +135,24 @@ function middlewareWrapper(middleware) {
 }
 
 /**
+ * Wraps express http methods function
+ * @param {*} original - original http method function
+ * @returns {function} - wrapped http method function
+ */
+function methodWrapper(original) {
+    return function internalMethodWrapper() {
+        // Check if we have middlewares
+        for (let i = 0; i < arguments.length - 1; i += 1) {
+            if (arguments[i] && typeof arguments[i] === 'function') {
+                arguments[i] = middlewareWrapper(arguments[i]);
+            }
+        }
+
+        return original.apply(this, arguments);
+    };
+}
+
+/**
  * Wraps express use function
  * @param {*} original - original use function
  * @returns {function} - wrapped use function
@@ -190,5 +209,13 @@ module.exports = {
             useWrapper,
             express => express.Router
         );
+        for (let i = 0; i < methods.length; i += 1) {
+            moduleUtils.patchModule(
+                'express',
+                methods[i],
+                methodWrapper,
+                express => express.Route.prototype
+            );
+        }
     },
 };

@@ -30,7 +30,19 @@ function extractEpsagonHeader(headers) {
     return headers && headers[EPSAGON_HEADER];
 }
 
+/**
+ * Returns whether a certain path should be ignored or not
+ * @param {String} path of the request
+ * @returns {Boolean} True if should ignore or false
+ */
+function shouldIgnore(path) {
+    return ignoredEndpoints.filter(
+        endpoint => path.startsWith(endpoint)
+    ).length > 0;
+}
+
 module.exports.ignoreEndpoints = ignoreEndpoints;
 module.exports.ignoredEndpoints = getIgnoredEndpoints;
 module.exports.extractEpsagonHeader = extractEpsagonHeader;
 module.exports.EPSAGON_HEADER = EPSAGON_HEADER;
+module.exports.shouldIgnore = shouldIgnore;

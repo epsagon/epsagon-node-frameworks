@@ -12,7 +12,7 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const hapiRunner = require('../runners/hapi.js');
-const { ignoredEndpoints } = require('../http.js');
+const { shouldIgnore } = require('../http.js');
 
 const IGNORED_PLUGINS = [
     'hapi-swagger',
@@ -75,7 +75,7 @@ function hapiMiddleware(request, h, originalHandler) {
     const response = originalHandler(request, h);
 
     // Check if endpoint is ignored
-    if (ignoredEndpoints().includes(request.route.path)) {
+    if (shouldIgnore(request.route.path)) {
         utils.debugLog(`Ignoring request: ${request.route.path}`);
         return response;
     }

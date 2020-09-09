@@ -10,7 +10,7 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const koaRunner = require('../runners/koa.js');
-const { ignoredEndpoints } = require('../http.js');
+const { shouldIgnore } = require('../http.js');
 
 
 /**
@@ -20,7 +20,7 @@ const { ignoredEndpoints } = require('../http.js');
  */
 async function koaMiddleware(ctx, next) {
     // Check if endpoint is ignored
-    if (ignoredEndpoints().includes(ctx.request.originalUrl)) {
+    if (shouldIgnore(ctx.request.originalUrl)) {
         utils.debugLog(`Ignoring request: ${ctx.request.originalUrl}`);
         await next();
         return;

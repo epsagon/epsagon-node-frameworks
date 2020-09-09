@@ -11,7 +11,7 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const expressRunner = require('../runners/express.js');
-const { ignoredEndpoints } = require('../http.js');
+const { shouldIgnore } = require('../http.js');
 const { methods } = require('../consts');
 
 /**
@@ -23,7 +23,8 @@ const { methods } = require('../consts');
 function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
     utils.debugLog('Epsagon Express - starting express middleware');
-    if (ignoredEndpoints().includes(req.originalUrl)) {
+
+    if (shouldIgnore(req.originalUrl)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
         next();
         return;

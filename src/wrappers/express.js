@@ -209,6 +209,7 @@ module.exports = {
             useWrapper,
             express => express.Router
         );
+        // Loop over http methods and patch them all with method wrapper
         for (let i = 0; i < methods.length; i += 1) {
             moduleUtils.patchModule(
                 'express',

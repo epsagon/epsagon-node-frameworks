@@ -19,6 +19,7 @@ const { EPSAGON_HEADER } = require('../http.js');
  */
 function kafkaMiddleware(message, originalHandler, consumer) {
     let originalHandlerSyncErr;
+    let runnerResult;
     try {
         // Initialize tracer and runner.
         tracer.restart();
@@ -61,7 +62,6 @@ function kafkaMiddleware(message, originalHandler, consumer) {
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', originalHandler.name || `${message.topic}-consumer`, 'execute', 'runner'
         );
-        let runnerResult;
         try {
             runnerResult = originalHandler(message);
         } catch (err) {
@@ -91,6 +91,7 @@ function kafkaMiddleware(message, originalHandler, consumer) {
     if (originalHandlerSyncErr) {
         throw originalHandlerSyncErr;
     }
+    return runnerResult;
 }
 
 

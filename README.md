@@ -139,6 +139,7 @@ The following frameworks are supported by Epsagon Frameworks.
 |[Hapi](#hapi)                           |`>=17.0.0`                 |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Koa](#koa)                             |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[KafkaJS](#kafkajs)                     |`>=1.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[kafka-node](#kafka-node)                     |`>=3.0.0`            |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[PubSub](#pubsub)                       |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[SQS Consumer](#sqs-consumer)           |`>=4.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[amqplib](#amqplib)                     |`>=0.5.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
@@ -260,6 +261,33 @@ await consumer.run({
     message.epsagon.label('key', 'value');
     message.epsagon.setError(Error('My custom error'));
   },
+})
+```
+
+### kafka-node
+
+Tracing `kafka0node` consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+consumer.on('message', function (message) {
+  message.epsagon.label('key', 'value');
+  message.epsagon.setError(Error('My custom error'));
 })
 ```
 
@@ -490,6 +518,7 @@ Epsagon provides out-of-the-box instrumentation (tracing) for many popular frame
 |pg                  |`>=4`                      |
 |mongodb             |`>=3.0.0`                  |
 |kafkajs             |`>=1.2.0`                  |
+|kafka-node          |`>=3.0.0`                  |
 |amqplib             |`>=0.5.0`                  |
 |amqp                |`>=0.2.0`                  |
 |redis               |`>=0.12.1`                 |

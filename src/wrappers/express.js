@@ -57,7 +57,7 @@ function expressMiddleware(req, res, next) {
                 utils.debugLog('Epsagon Express - sending trace');
                 tracer.sendTrace(() => {}).then(resolve).then(() => {
                     utils.debugLog('Epsagon Express - trace sent + request resolved');
-                    traceContext.destroyAsync(asyncHooks.executionAsyncId());
+                    traceContext.destroyAsync(asyncHooks.executionAsyncId(), true);
                 });
             });
         });

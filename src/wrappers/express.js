@@ -94,9 +94,9 @@ function nextWrapper(next) {
             utils.debugLog(error);
         }
 
-        traceContext.setAsyncReference(asyncId);
+        traceContext.setAsyncReference(asyncId, true);
         const result = originalNext(...arguments);
-        traceContext.setAsyncReference(asyncId);
+        traceContext.setAsyncReference(asyncId, true);
         return result;
     };
 }

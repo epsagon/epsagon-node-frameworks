@@ -23,7 +23,7 @@ function destroyAsync(asyncId, forceDelete = false) {
                 delete tracers[key];
             }
         });
-    } else if (tracers[asyncId] && !tracers[asyncId].isWithRelationship) {
+    } else if (tracers[asyncId] && !tracers[asyncId].withRelationship) {
         delete tracers[asyncId];
     }
 }
@@ -53,12 +53,13 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 /**
  * Creates a reference to another asyncId
  * @param {Number} asyncId sets the reference to this asyncId
+ * @param {boolean} withRelationship sets with relationship if needed
  */
-function setAsyncReference(asyncId) {
+function setAsyncReference(asyncId, withRelationship = false) {
     if (!tracers[asyncId]) return;
     tracers[asyncHooks.executionAsyncId()] = tracers[asyncId];
     if (tracers[asyncHooks.executionAsyncId()]) {
-        tracers[asyncHooks.executionAsyncId()].isWithRelationship = true;
+        tracers[asyncHooks.executionAsyncId()].withRelationship = withRelationship;
     }
 }
 

@@ -97,11 +97,10 @@ function init() {
     hook.enable();
 }
 
-
 module.exports = {
     get,
     init,
     setAsyncReference,
-    RunInContext,
     destroyAsync,
+    RunInContext,
 };

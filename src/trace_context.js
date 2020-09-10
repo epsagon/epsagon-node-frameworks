@@ -16,7 +16,11 @@ const weaks = new WeakMap();
  * @param {Number} asyncId The id of the async thread
  */
 function destroyAsync(asyncId) {
-    delete tracers[asyncId];
+    Object.entries(tracers).forEach(([key, tracer]) => {
+        if (tracers[asyncId] === tracer) {
+            delete tracers[key];
+        }
+    });
 }
 
 /**
@@ -48,7 +52,6 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 function setAsyncReference(asyncId) {
     if (!tracers[asyncId]) return;
     tracers[asyncHooks.executionAsyncId()] = tracers[asyncId];
-    tracers[asyncHooks.triggerAsyncId()] = tracers[asyncId];
 }
 
 
@@ -80,8 +83,6 @@ function get() {
 function init() {
     const hook = asyncHooks.createHook({
         init: initAsync,
-        destroy: destroyAsync,
-        promiseResolve: destroyAsync,
     });
     hook.enable();
 }

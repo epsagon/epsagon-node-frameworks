@@ -16,6 +16,7 @@ const { EPSAGON_HEADER } = require('../http.js');
  * @param {object} message the messages param to send
  * @param {function} originalHandler original consumer function
  * @param {Consumer} consumer original consumer
+ * @returns {object} Original handler's response
  */
 function kafkaMiddleware(message, originalHandler, consumer) {
     let originalHandlerSyncErr;

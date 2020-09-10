@@ -93,4 +93,5 @@ module.exports = {
     init,
     setAsyncReference,
     RunInContext,
+    destroyAsync
 };

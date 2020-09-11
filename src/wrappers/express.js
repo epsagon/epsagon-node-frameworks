@@ -57,6 +57,7 @@ function expressMiddleware(req, res, next) {
                 utils.debugLog('Epsagon Express - sending trace');
                 tracer.sendTrace(() => {}).then(resolve).then(() => {
                     utils.debugLog('Epsagon Express - trace sent + request resolved');
+                    traceContext.destroyAsync(asyncHooks.executionAsyncId(), true);
                 });
             });
         });
@@ -93,9 +94,9 @@ function nextWrapper(next) {
             utils.debugLog(error);
         }
 
-        traceContext.setAsyncReference(asyncId);
+        traceContext.setAsyncReference(asyncId, true);
         const result = originalNext(...arguments);
-        traceContext.setAsyncReference(asyncId);
+        traceContext.setAsyncReference(asyncId, true);
         return result;
     };
 }

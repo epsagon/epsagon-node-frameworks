@@ -14,9 +14,18 @@ const weaks = new WeakMap();
 /**
  * Destroys the tracer of an async context
  * @param {Number} asyncId The id of the async thread
+ * @param {Boolean} forceDelete Force delete all traces relationships
  */
-function destroyAsync(asyncId) {
-    delete tracers[asyncId];
+function destroyAsync(asyncId, forceDelete = false) {
+    if (forceDelete) {
+        Object.entries(tracers).forEach(([key, tracer]) => {
+            if (tracers[asyncId] === tracer) {
+                delete tracers[key];
+            }
+        });
+    } else if (tracers[asyncId] && !tracers[asyncId].withRelationship) {
+        delete tracers[asyncId];
+    }
 }
 
 /**
@@ -44,11 +53,14 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 /**
  * Creates a reference to another asyncId
  * @param {Number} asyncId sets the reference to this asyncId
+ * @param {boolean} withRelationship sets with relationship if needed
  */
-function setAsyncReference(asyncId) {
+function setAsyncReference(asyncId, withRelationship = false) {
     if (!tracers[asyncId]) return;
     tracers[asyncHooks.executionAsyncId()] = tracers[asyncId];
-    tracers[asyncHooks.triggerAsyncId()] = tracers[asyncId];
+    if (tracers[asyncHooks.executionAsyncId()]) {
+        tracers[asyncHooks.executionAsyncId()].withRelationship = withRelationship;
+    }
 }
 
 
@@ -86,10 +98,10 @@ function init() {
     hook.enable();
 }
 
-
 module.exports = {
     get,
     init,
     setAsyncReference,
+    destroyAsync,
     RunInContext,
 };

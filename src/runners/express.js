@@ -49,13 +49,19 @@ function createRunner(req, startTime) {
 function finishRunner(expressEvent, res, req, startTime) {
     eventInterface.addToMetadata(expressEvent, {
         url: `${req.protocol}://${req.hostname}${req.path}`,
-        query: req.query,
         status_code: res.statusCode,
     }, {
         request_headers: req.headers,
-        params: req.params,
         response_headers: res.getHeaders(),
     });
+
+    if (Object.keys(req.query).length) {
+        eventInterface.addToMetadata(expressEvent, { query: req.query });
+    }
+
+    if (Object.keys(req.params).length) {
+        eventInterface.addToMetadata(expressEvent, {}, { params: req.params });
+    }
 
     if (req.route) {
         eventInterface.addToMetadata(expressEvent, { route_path: req.route.path });

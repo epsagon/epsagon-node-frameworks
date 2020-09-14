@@ -75,7 +75,7 @@ function hapiMiddleware(request, h, originalHandler) {
     const response = originalHandler(request, h);
 
     // Check if endpoint is ignored
-    if (shouldIgnore(request.route.path)) {
+    if (shouldIgnore(request.route.path, request.headers)) {
         utils.debugLog(`Ignoring request: ${request.route.path}`);
         return response;
     }

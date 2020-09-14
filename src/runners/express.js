@@ -38,6 +38,44 @@ function createRunner(req, startTime) {
     return expressEvent;
 }
 
+/**
+ * Check if parametered path and absolute path are equal
+ * @param {Array} parameteredPathSplitted parametered splitted path
+ * @param {Array} pathSplitted absolete splitted path
+ * @return {Boolean} true if equal false if not.
+ */
+function checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted) {
+    for (let i = 0; i < pathSplitted.length; i += 1) {
+        if (parameteredPathSplitted[i] !== pathSplitted[i] &&
+            parameteredPathSplitted[i] &&
+            parameteredPathSplitted[i][0] !== ':') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Find the parametered path that was called
+ * @param {*} req - express http request object
+ * @return {Object} parametered path if not find
+ * return the last one.
+ */
+function findCalledParameteredPath(req) {
+    let matchedPath = req.route.path[req.route.path.length - 1];
+    req.route.path.forEach((parameteredPath) => {
+        const parameteredPathSplitted = parameteredPath.split('/');
+        const pathSplitted = req.path.split('/');
+        if (parameteredPathSplitted.length === pathSplitted.length) {
+            if (checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted)) {
+                matchedPath = parameteredPath;
+            }
+        }
+    });
+    return matchedPath;
+}
+
 
 /**
  * Terminates the running Express (runner)
@@ -63,8 +101,13 @@ function finishRunner(expressEvent, res, req, startTime) {
         eventInterface.addToMetadata(expressEvent, {}, { params: req.params });
     }
 
-    if (req.originalUrl) {
-        eventInterface.addToMetadata(expressEvent, { route_path: req.originalUrl });
+    if (req.route) {
+        if (req.route.path instanceof Array) {
+            eventInterface.addToMetadata(expressEvent,
+                { route_path: findCalledParameteredPath(req) });
+        } else {
+            eventInterface.addToMetadata(expressEvent, { route_path: req.route.path });
+        }
     }
 
     if (extractEpsagonHeader(req.headers)) {

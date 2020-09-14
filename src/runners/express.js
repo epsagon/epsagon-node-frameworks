@@ -48,7 +48,7 @@ function createRunner(req, startTime) {
  */
 function finishRunner(expressEvent, res, req, startTime) {
     eventInterface.addToMetadata(expressEvent, {
-        url: `${req.protocol}://${req.hostname}${req.path}`,
+        url: `${req.protocol}://${req.hostname}${req.originalUrl}`,
         status_code: res.statusCode,
     }, {
         request_headers: req.headers,
@@ -63,8 +63,8 @@ function finishRunner(expressEvent, res, req, startTime) {
         eventInterface.addToMetadata(expressEvent, {}, { params: req.params });
     }
 
-    if (req.route) {
-        eventInterface.addToMetadata(expressEvent, { route_path: req.route.path });
+    if (req.originalUrl) {
+        eventInterface.addToMetadata(expressEvent, { route_path: req.originalUrl });
     }
 
     if (extractEpsagonHeader(req.headers)) {

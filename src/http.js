@@ -34,7 +34,7 @@ function extractEpsagonHeader(headers) {
 }
 
 /**
- * Returns whether a certain path should be ignored or not
+ * Returns whether a certain path or header should be ignored or not
  * @param {String} path of the request
  * @param {Object} headers of the request
  * @returns {Boolean} True if should ignore or false

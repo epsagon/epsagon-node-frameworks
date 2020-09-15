@@ -45,6 +45,7 @@ function createRunner(req, startTime) {
  * @return {Boolean} true if equal false if not.
  */
 function checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted) {
+    if (parameteredPathSplitted.length !== pathSplitted.length) return false;
     for (let i = 0; i < pathSplitted.length; i += 1) {
         if (parameteredPathSplitted[i] !== pathSplitted[i] &&
             parameteredPathSplitted[i] &&
@@ -63,11 +64,11 @@ function checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted) {
  * return the last one.
  */
 function findCalledParameteredPath(req) {
-    let matchedPath = req.route.path[req.route.path.length - 1];
+    let matchedPath;
     req.route.path.forEach((parameteredPath) => {
         const parameteredPathSplitted = parameteredPath.split('/');
         const pathSplitted = req.path.split('/');
-        if (parameteredPathSplitted.length === pathSplitted.length && checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted)) {
+        if (checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted)) {
             matchedPath = parameteredPath;
         }
     });
@@ -100,11 +101,11 @@ function finishRunner(expressEvent, res, req, startTime) {
     }
 
     if (req.route) {
-        if (req.route.path instanceof Array) {
+        const routePath = (req.route.path instanceof Array) ?
+            findCalledParameteredPath(req) : req.route.path;
+        if (routePath) {
             eventInterface.addToMetadata(expressEvent,
-                { route_path: findCalledParameteredPath(req) });
-        } else {
-            eventInterface.addToMetadata(expressEvent, { route_path: req.route.path });
+                { route_path: req.originalUrl.replace(req.path, routePath) });
         }
     }
 

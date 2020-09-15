@@ -105,7 +105,7 @@ function finishRunner(expressEvent, res, req, startTime) {
             findCalledParameteredPath(req) : req.route.path;
         if (routePath) {
             eventInterface.addToMetadata(expressEvent,
-                { route_path: req.baseUrl + routePath});
+                { route_path: req.baseUrl + routePath });
         }
     }
 

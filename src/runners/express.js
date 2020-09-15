@@ -67,10 +67,8 @@ function findCalledParameteredPath(req) {
     req.route.path.forEach((parameteredPath) => {
         const parameteredPathSplitted = parameteredPath.split('/');
         const pathSplitted = req.path.split('/');
-        if (parameteredPathSplitted.length === pathSplitted.length) {
-            if (checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted)) {
-                matchedPath = parameteredPath;
-            }
+        if (parameteredPathSplitted.length === pathSplitted.length && checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted)) {
+            matchedPath = parameteredPath;
         }
     });
     return matchedPath;

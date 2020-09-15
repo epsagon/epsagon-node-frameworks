@@ -38,6 +38,43 @@ function createRunner(req, startTime) {
     return expressEvent;
 }
 
+/**
+ * Check if parametered path and absolute path are equal
+ * @param {Array} parameteredPathSplitted parametered splitted path
+ * @param {Array} pathSplitted absolete splitted path
+ * @return {Boolean} true if equal false if not.
+ */
+function checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted) {
+    if (parameteredPathSplitted.length !== pathSplitted.length) return false;
+    for (let i = 0; i < pathSplitted.length; i += 1) {
+        if (parameteredPathSplitted[i] !== pathSplitted[i] &&
+            parameteredPathSplitted[i] &&
+            parameteredPathSplitted[i][0] !== ':') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Find the parametered path that was called
+ * @param {*} req - express http request object
+ * @return {Object} parametered path if not find
+ * return the last one.
+ */
+function findCalledParameteredPath(req) {
+    let matchedPath;
+    req.route.path.forEach((parameteredPath) => {
+        const parameteredPathSplitted = parameteredPath.split('/');
+        const pathSplitted = req.path.split('/');
+        if (checkIfPathsAreEqual(parameteredPathSplitted, pathSplitted)) {
+            matchedPath = parameteredPath;
+        }
+    });
+    return matchedPath;
+}
+
 
 /**
  * Terminates the running Express (runner)
@@ -48,7 +85,7 @@ function createRunner(req, startTime) {
  */
 function finishRunner(expressEvent, res, req, startTime) {
     eventInterface.addToMetadata(expressEvent, {
-        url: `${req.protocol}://${req.hostname}${req.path}`,
+        url: `${req.protocol}://${req.hostname}${req.originalUrl}`,
         status_code: res.statusCode,
     }, {
         request_headers: req.headers,
@@ -64,7 +101,12 @@ function finishRunner(expressEvent, res, req, startTime) {
     }
 
     if (req.route) {
-        eventInterface.addToMetadata(expressEvent, { route_path: req.route.path });
+        const routePath = (req.route.path instanceof Array) ?
+            findCalledParameteredPath(req) : req.route.path;
+        if (routePath) {
+            eventInterface.addToMetadata(expressEvent,
+                { route_path: req.originalUrl.replace(req.path, routePath) });
+        }
     }
 
     if (extractEpsagonHeader(req.headers)) {

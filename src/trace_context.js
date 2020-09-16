@@ -12,18 +12,36 @@ const tracers = {};
 const weaks = new WeakMap();
 
 /**
+ * Remove hooks and related hooks from tracers dictionary
+ * @param {*} hookId hookId to remove
+ */
+function removeRelatedHooks(hookId) {
+    if (tracers[hookId] && tracers[hookId].relatedHooks) {
+        let clonedRelatedHooks = new Set(tracers[hookId].relatedHooks);
+        let index = 0;
+        while (index < clonedRelatedHooks.size) {
+            const arrayOfRelatedHooks = [...clonedRelatedHooks];
+            const currentTrace = tracers[arrayOfRelatedHooks[index]];
+            delete tracers[arrayOfRelatedHooks[index]];
+            if (currentTrace && currentTrace.relatedHooks) {
+                clonedRelatedHooks =
+                new Set([...arrayOfRelatedHooks, ...currentTrace.relatedHooks]);
+            }
+            index += 1;
+        }
+    }
+    delete tracers[hookId];
+}
+
+/**
  * Destroys the tracer of an async context
  * @param {Number} asyncId The id of the async thread
  * @param {Boolean} forceDelete Force delete all traces relationships
  */
 function destroyAsync(asyncId, forceDelete = false) {
     if (forceDelete) {
-        Object.entries(tracers).forEach(([key, tracer]) => {
-            if (tracers[asyncId] === tracer) {
-                delete tracers[key];
-            }
-        });
-    } else if (tracers[asyncId] && !tracers[asyncId].withRelationship) {
+        removeRelatedHooks(asyncId);
+    } else if (tracers[asyncId] && !tracers[asyncId].relatedHooks) {
         delete tracers[asyncId];
     }
 }
@@ -38,9 +56,14 @@ function destroyAsync(asyncId, forceDelete = false) {
  */
 function initAsync(asyncId, type, triggerAsyncId, resource) {
     if (tracers[triggerAsyncId]) {
-        tracers[asyncId] = tracers[triggerAsyncId];
+        tracers[asyncId] = { ...tracers[triggerAsyncId] };
     } else if (tracers[asyncHooks.executionAsyncId()]) {
-        tracers[asyncId] = tracers[asyncHooks.executionAsyncId()];
+        tracers[asyncId] = { ...tracers[asyncHooks.executionAsyncId()] };
+    }
+    if (tracers[asyncId] && tracers[asyncId].relatedHooks) {
+        tracers[asyncId].relatedHooks.add(asyncHooks.executionAsyncId());
+        tracers[asyncId].relatedHooks.add(triggerAsyncId);
+        tracers[asyncId].relatedHooks.add(asyncId);
     }
 
     if (hasKeepAliveBug && (type === 'TCPWRAP' || type === 'HTTPPARSER')) {
@@ -53,14 +76,16 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 /**
  * Creates a reference to another asyncId
  * @param {Number} asyncId sets the reference to this asyncId
- * @param {boolean} withRelationship sets with relationship if needed
  */
-function setAsyncReference(asyncId, withRelationship = false) {
+function setAsyncReference(asyncId) {
     if (!tracers[asyncId]) return;
     tracers[asyncHooks.executionAsyncId()] = tracers[asyncId];
-    if (tracers[asyncHooks.executionAsyncId()]) {
-        tracers[asyncHooks.executionAsyncId()].withRelationship = withRelationship;
+    if (!tracers[asyncHooks.executionAsyncId()].relatedHooks) {
+        tracers[asyncHooks.executionAsyncId()].relatedHooks = new Set();
     }
+    tracers[asyncHooks.executionAsyncId()].relatedHooks.add(asyncId);
+    tracers[asyncHooks.executionAsyncId()].relatedHooks.add(asyncHooks.triggerAsyncId());
+    tracers[asyncHooks.executionAsyncId()].relatedHooks.add(asyncHooks.executionAsyncId());
 }
 
 

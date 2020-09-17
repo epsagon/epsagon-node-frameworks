@@ -20,7 +20,7 @@ const { shouldIgnore } = require('../http.js');
  */
 async function koaMiddleware(ctx, next) {
     // Check if endpoint is ignored
-    if (shouldIgnore(ctx.request.originalUrl)) {
+    if (shouldIgnore(ctx.request.originalUrl, ctx.request.headers)) {
         utils.debugLog(`Ignoring request: ${ctx.request.originalUrl}`);
         await next();
         return;

@@ -24,7 +24,7 @@ function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
     utils.debugLog('Epsagon Express - starting express middleware');
 
-    if (shouldIgnore(req.originalUrl)) {
+    if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
         next();
         return;

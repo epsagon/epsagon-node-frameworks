@@ -192,6 +192,28 @@ function expressWrapper(wrappedFunction) {
     };
 }
 
+/**
+ * Wraps the Express module listen function in order to add the last error middleware
+ * @param {Function} wrappedFunction Express listen function
+ * @return {Function} updated wrapped listen
+ */
+function expressListenWrapper(wrappedFunction) {
+    return function internalExpressListenWrapper() {
+        const result = wrappedFunction.apply(this, arguments);
+        this.use((err, req, _res, next) => {
+            // Setting the express err as an Epsagon err
+            if (err) {
+                req.epsagon.setError({
+                    name: 'Error',
+                    message: err.message,
+                    stack: err.stack,
+                });
+            }
+            next();
+        });
+        return result;
+    };
+}
 
 module.exports = {
     /**
@@ -202,6 +224,12 @@ module.exports = {
             'express',
             'init',
             expressWrapper,
+            express => express.application
+        );
+        moduleUtils.patchModule(
+            'express',
+            'listen',
+            expressListenWrapper,
             express => express.application
         );
         moduleUtils.patchModule(

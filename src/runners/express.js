@@ -92,11 +92,11 @@ function finishRunner(expressEvent, res, req, startTime) {
         response_headers: res.getHeaders(),
     });
 
-    if (Object.keys(req.query).length) {
+    if (req.query && Object.keys(req.query).length) {
         eventInterface.addToMetadata(expressEvent, { query: req.query });
     }
 
-    if (Object.keys(req.params).length) {
+    if (req.params && Object.keys(req.params).length) {
         eventInterface.addToMetadata(expressEvent, {}, { params: req.params });
     }
 

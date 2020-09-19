@@ -49,11 +49,12 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
             message: handlerParams.message,
         });
 
-        const { label, setError } = tracer;
+        const { label, setError, getTraceUrl } = tracer;
         // eslint-disable-next-line no-param-reassign
         handlerParams.epsagon = {
             label,
             setError,
+            getTraceUrl,
         };
 
         const runnerName = callback && callback.name ? callback.name : `${topic}-consumer`;

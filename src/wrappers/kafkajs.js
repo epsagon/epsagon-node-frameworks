@@ -52,11 +52,12 @@ function kafkaMiddleware(message, originalHandler) {
             body: message.message.value.toString(),
         });
 
-        const { label, setError } = tracer;
+        const { label, setError, getTraceUrl } = tracer;
         // eslint-disable-next-line no-param-reassign
         message.epsagon = {
             label,
             setError,
+            getTraceUrl,
         };
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'

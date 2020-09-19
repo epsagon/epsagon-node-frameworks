@@ -65,10 +65,11 @@ function hapiMiddleware(request, h, originalHandler) {
     }
 
     // Inject trace functions
-    const { label, setError } = tracer;
+    const { label, setError, getTraceUrl } = tracer;
     request.epsagon = {
         label,
         setError,
+        getTraceUrl,
     };
 
     // Run the request, activate the context

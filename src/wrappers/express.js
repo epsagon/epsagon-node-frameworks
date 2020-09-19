@@ -65,10 +65,11 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('Epsagon Express - added runner');
 
         // Inject trace functions
-        const { label, setError } = tracer;
+        const { label, setError, getTraceUrl } = tracer;
         req.epsagon = {
             label,
             setError,
+            getTraceUrl,
         };
     } catch (err) {
         utils.debugLog('Epsagon Express - general catch');

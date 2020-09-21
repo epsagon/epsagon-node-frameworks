@@ -42,12 +42,6 @@ function websocketEmitterMiddleware(message, originalHandler, requestFunctionThi
         const triggerMetadata = { message };
         eventInterface.finalizeEvent(websocketEvent, websocketStartTime, null, triggerMetadata);
 
-        const { label, setError } = tracer;
-        // eslint-disable-next-line no-param-reassign
-        message.epsagon = {
-            label,
-            setError,
-        };
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'
         );

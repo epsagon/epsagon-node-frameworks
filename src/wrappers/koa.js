@@ -48,10 +48,11 @@ async function koaMiddleware(ctx, next) {
         tracer.addRunner(koaEvent, requestPromise);
 
         // Inject trace functions
-        const { label, setError } = tracer;
+        const { label, setError, getTraceUrl } = tracer;
         ctx.epsagon = {
             label,
             setError,
+            getTraceUrl,
         };
     } catch (err) {
         utils.debugLog(err);

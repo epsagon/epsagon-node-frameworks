@@ -64,11 +64,12 @@ function amqpSubscriberMiddleware(
             message: JSON.stringify(message),
         });
 
-        const { label, setError } = tracer;
+        const { label, setError, getTraceUrl } = tracer;
         // eslint-disable-next-line no-param-reassign
         message.epsagon = {
             label,
             setError,
+            getTraceUrl,
         };
         const runnerName = originalCallback && originalCallback.name ? originalCallback.name : `${deliveryInfo.routingKey}-consumer`;
         const { slsEvent, startTime } = eventInterface.initializeEvent(

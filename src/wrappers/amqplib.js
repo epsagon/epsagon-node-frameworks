@@ -58,11 +58,12 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
             message: message.content.toString(),
         });
 
-        const { label, setError } = tracer;
+        const { label, setError, getTraceUrl } = tracer;
         // eslint-disable-next-line no-param-reassign
         message.epsagon = {
             label,
             setError,
+            getTraceUrl,
         };
         const runnerName = callback && callback.name ? callback.name : `${message.fields.routingKey}-consumer`;
         const { slsEvent, startTime } = eventInterface.initializeEvent(

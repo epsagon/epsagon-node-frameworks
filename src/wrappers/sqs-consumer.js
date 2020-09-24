@@ -168,7 +168,7 @@ function sqsConsumerWrapper(wrappedFunction) {
             app.originalHandleMessage = app.handleMessageBatch;
             app.handleMessageBatch = patchedCallback;
         }
-        utils.debugLog('sqs-consumer - wrapper done');
+        utils.debugLog('sqs-consumer - done wrapper');
         return app;
     };
 }

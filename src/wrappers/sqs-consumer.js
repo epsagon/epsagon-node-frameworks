@@ -39,11 +39,14 @@ function parseQueueUrl(queueUrl) {
 
 /**
  * Handle consumer event from sqs
- * @param {SQSMessage} message received message.
+ * @param {Array/SQSMessage} messages list of SQSMessage or a single one.
  * @param {object} app consumer app.
  */
-function sqsConsumerMiddleware(message, app) {
+function sqsConsumerMiddleware(messages, app) {
     utils.debugLog('sqs-consumer - starting middleware');
+
+    // Currently we take only the first message
+    const message = Array.isArray(messages) ? messages[0] : messages;
     let originalHandlerSyncErr;
     try {
         // Initialize tracer and runner.
@@ -54,7 +57,7 @@ function sqsConsumerMiddleware(message, app) {
         eventInterface.initializeEvent(
             'sqs',
             queueName,
-            'ReceiveMessage',
+            Array.isArray(messages) ? 'ReceiveMessages' : 'ReceiveMessage',
             'trigger'
         );
         tracer.addEvent(sqsEvent);
@@ -87,7 +90,7 @@ function sqsConsumerMiddleware(message, app) {
         utils.debugLog('sqs-consumer - initialized runner event');
         let runnerResult;
         try {
-            runnerResult = app.originalHandleMessage(message);
+            runnerResult = app.originalHandleMessage(messages);
             utils.debugLog('sqs-consumer - executed original handler');
         } catch (err) {
             utils.debugLog('sqs-consumer - error in original handler');
@@ -156,8 +159,15 @@ function sqsConsumerWrapper(wrappedFunction) {
             tracer.createTracer,
             () => sqsConsumerMiddleware(message, app)
         );
-        app.originalHandleMessage = app.handleMessage;
-        app.handleMessage = patchedCallback;
+        if (options.handleMessage) {
+            utils.debugLog('sqs-consumer - wrapping handleMessage');
+            app.originalHandleMessage = app.handleMessage;
+            app.handleMessage = patchedCallback;
+        } else if (options.handleMessageBatch) {
+            utils.debugLog('sqs-consumer - wrapping handleMessageBatch');
+            app.originalHandleMessage = app.handleMessageBatch;
+            app.handleMessageBatch = patchedCallback;
+        }
         utils.debugLog('sqs-consumer - wrapper done');
         return app;
     };

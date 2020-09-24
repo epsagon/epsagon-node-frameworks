@@ -39,22 +39,25 @@ function parseQueueUrl(queueUrl) {
 
 /**
  * Handle consumer event from sqs
- * @param {SQSMessage} message received message.
+ * @param {Array/SQSMessage} messages list of SQSMessage or a single one.
  * @param {object} app consumer app.
  */
-function sqsConsumerMiddleware(message, app) {
-    utils.debugLog('Epsagon SQS - starting middleware');
+function sqsConsumerMiddleware(messages, app) {
+    utils.debugLog('sqs-consumer - starting middleware');
+
+    // Currently we take only the first message
+    const message = Array.isArray(messages) ? messages[0] : messages;
     let originalHandlerSyncErr;
     try {
         // Initialize tracer and runner.
         tracer.restart();
         const { queueName, awsAccount, region } = parseQueueUrl(app.queueUrl);
-        utils.debugLog('Epsagon SQS - parsed queue url', queueName, awsAccount, region);
+        utils.debugLog('sqs-consumer - parsed queue url', queueName, awsAccount, region);
         const { slsEvent: sqsEvent, startTime: sqsStartTime } =
         eventInterface.initializeEvent(
             'sqs',
             queueName,
-            'ReceiveMessage',
+            Array.isArray(messages) ? 'ReceiveMessages' : 'ReceiveMessage',
             'trigger'
         );
         tracer.addEvent(sqsEvent);
@@ -67,10 +70,10 @@ function sqsConsumerMiddleware(message, app) {
             message_body: message.Body,
             message_attributed: message.MessageAttributes,
         });
-        utils.debugLog('Epsagon SQS - created sqs event');
+        utils.debugLog('sqs-consumer - created sqs event');
         const snsData = sqsUtils.getSNSTrigger([message]);
         if (snsData != null) {
-            utils.debugLog('Epsagon SQS - created sns event');
+            utils.debugLog('sqs-consumer - created sns event');
             eventInterface.addToMetadata(sqsEvent, { 'SNS Trigger': snsData });
         }
 
@@ -84,58 +87,58 @@ function sqsConsumerMiddleware(message, app) {
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'
         );
-        utils.debugLog('Epsagon SQS - initialized runner event');
+        utils.debugLog('sqs-consumer - initialized runner event');
         let runnerResult;
         try {
-            runnerResult = app.originalHandleMessage(message);
-            utils.debugLog('Epsagon SQS - executed original handler');
+            runnerResult = app.originalHandleMessage(messages);
+            utils.debugLog('sqs-consumer - executed original handler');
         } catch (err) {
-            utils.debugLog('Epsagon SQS - error in original handler');
+            utils.debugLog('sqs-consumer - error in original handler');
             originalHandlerSyncErr = err;
         }
 
         if (app.originalHandleMessage.name) {
-            utils.debugLog('Epsagon SQS - set handler name');
+            utils.debugLog('sqs-consumer - set handler name');
             nodeEvent.getResource().setName(app.originalHandleMessage.name);
         }
 
         // Handle and finalize async user function.
         if (utils.isPromise(runnerResult)) {
-            utils.debugLog('Epsagon SQS - result is promise');
+            utils.debugLog('sqs-consumer - result is promise');
             let originalHandlerAsyncError;
             runnerResult.catch((err) => {
-                utils.debugLog('Epsagon SQS - original handler threw error');
+                utils.debugLog('sqs-consumer - original handler threw error');
                 originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {
-                utils.debugLog('Epsagon SQS - finalizing event');
+                utils.debugLog('sqs-consumer - finalizing event');
                 eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
-                utils.debugLog('Epsagon SQS - sending trace');
+                utils.debugLog('sqs-consumer - sending trace');
                 tracer.sendTrace(() => {}).then(() => {
-                    utils.debugLog('Epsagon SQS - trace sent');
+                    utils.debugLog('sqs-consumer - trace sent');
                 });
-                utils.debugLog('Epsagon SQS - post send');
+                utils.debugLog('sqs-consumer - post send');
             });
         } else {
             // Finalize sync user function.
-            utils.debugLog('Epsagon SQS - response not promise');
-            utils.debugLog('Epsagon SQS - finalizing event');
+            utils.debugLog('sqs-consumer - response not promise');
+            utils.debugLog('sqs-consumer - finalizing event');
             eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
-            utils.debugLog('Epsagon SQS - sending trace');
+            utils.debugLog('sqs-consumer - sending trace');
             tracer.sendTrace(() => {}).then(() => {
-                utils.debugLog('Epsagon SQS - trace sent');
+                utils.debugLog('sqs-consumer - trace sent');
             });
-            utils.debugLog('Epsagon SQS - post send');
+            utils.debugLog('sqs-consumer - post send');
         }
         tracer.addRunner(nodeEvent, runnerResult);
-        utils.debugLog('Epsagon SQS - added runner');
+        utils.debugLog('sqs-consumer - added runner');
     } catch (err) {
-        utils.debugLog('Epsagon SQS - general error', err);
+        utils.debugLog(`sqs-consumer - general error ${err}`);
         tracer.addException(err);
     }
     // Throwing error in case of sync user function.
     if (originalHandlerSyncErr) {
-        utils.debugLog('Epsagon SQS - rethrowing original sync error');
+        utils.debugLog('sqs-consumer - rethrowing original sync error');
         throw originalHandlerSyncErr;
     }
 }
@@ -149,13 +152,23 @@ function sqsConsumerWrapper(wrappedFunction) {
     traceContext.init();
     tracer.getTrace = traceContext.get;
     return function internalSqsConsumerWrapper(options) {
+        utils.debugLog('sqs-consumer - inside wrapper');
+        utils.debugLog(`sqs-consumer - options: ${options}`);
         const app = wrappedFunction.apply(this, [options]);
         const patchedCallback = message => traceContext.RunInContext(
             tracer.createTracer,
             () => sqsConsumerMiddleware(message, app)
         );
-        app.originalHandleMessage = app.handleMessage;
-        app.handleMessage = patchedCallback;
+        if (options.handleMessage) {
+            utils.debugLog('sqs-consumer - wrapping handleMessage');
+            app.originalHandleMessage = app.handleMessage;
+            app.handleMessage = patchedCallback;
+        } else if (options.handleMessageBatch) {
+            utils.debugLog('sqs-consumer - wrapping handleMessageBatch');
+            app.originalHandleMessage = app.handleMessageBatch;
+            app.handleMessageBatch = patchedCallback;
+        }
+        utils.debugLog('sqs-consumer - done wrapper');
         return app;
     };
 }

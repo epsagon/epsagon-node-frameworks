@@ -1,21 +1,22 @@
 // const express = require("express");
 // const epsagon = require("../../../src/index");
-const epsagon = require("epsagon-frameworks");
+// const epsagon = require("epsagon-frameworks");
 const BunnyBus = require("@tenna-llc/bunnybus");
 var axios = require("axios");
 
-epsagon.init({
-  token: process.env.EPSAGON_TOKEN,
-  appName: "itay-bunnybus-test",
-  metadataOnly: false,
-});
+// epsagon.init({
+//   token: process.env.EPSAGON_TOKEN,
+//   appName: "itay-bunnybus-test",
+//   metadataOnly: false,
+// });
 
 const bunnyBus = new BunnyBus({
-  hostname: "bonobo-01.rmq.cloudamqp.com",
+  // hostname: "localhost",
+  hostname: "eager-deer-01.rmq.cloudamqp.com",
   port: 5672,
-  password: "e--sOFi9AEw2Yi475rGVA7-nEpccsHH5",
-  username: "stitheal",
-  vhost: "stitheal",
+  password: "ibMZarLKO5ALU3jSRvIdpGwavIItpDKO",
+  username: "zqlqwfrd",
+  vhost: "zqlqwfrd",
 });
 
 // function sleep(ms) {
@@ -47,23 +48,34 @@ async function subscribeHandlers() {
 
 async function publishMessage() {
   try {
-    await bunnyBus.publish({
+    bunnyBus.publish({
       message: {
         event: "create-event",
         comment: "Test message",
       },
     });
+    console.log("message published");
   } catch (err) {
     console.log("failed to publish", err);
   }
 }
 
-subscribeHandlers();
+// subscribeHandlers();
 
-// setInterval(() => {
-//   publishMessage();
-//   console.log("message published");
-// }, 200);
+setInterval(async () => {
+  await Promise.all([
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+    publishMessage(),
+  ]);
+}, 1);
 
 // const app = express();
 

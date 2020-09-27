@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@tenna-llc/bunnybus": "github:tenna-llc/bunnybus",
+    "axios": "^0.20.0",
     "bunnybus": "^4.2.1",
     "epsagon-frameworks": "^1.23.0",
     "express": "^4.17.1"

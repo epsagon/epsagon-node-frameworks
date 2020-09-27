@@ -1,13 +1,13 @@
 // const express = require("express");
-// const epsagon = require("epsagon-node");
+// const epsagon = require("../../../src/index");
 const epsagon = require("epsagon-frameworks");
 const BunnyBus = require("@tenna-llc/bunnybus");
 
-epsagon.init({
-  token: process.env.EPSAGON_TOKEN,
-  appName: "itay-bunnybus-test",
-  metadataOnly: false,
-});
+// epsagon.init({
+//   token: process.env.EPSAGON_TOKEN,
+//   appName: "itay-bunnybus-test",
+//   metadataOnly: false,
+// });
 
 const bunnyBus = new BunnyBus({
   hostname: "bonobo-01.rmq.cloudamqp.com",
@@ -39,6 +39,16 @@ async function subscribeHandlers() {
   } catch (err) {
     console.log("failed to subscribe", err);
   }
+  try {
+    await bunnyBus.publish({
+      message: {
+        event: "create-event",
+        comment: "Test message",
+      },
+    });
+  } catch (err) {
+    console.log("failed to publish", err);
+  }
 }
 
 // async function publishMessage() {
@@ -55,11 +65,6 @@ async function subscribeHandlers() {
 // }
 
 subscribeHandlers();
-
-// setInterval(async () => {
-//   await publishMessage();
-//   console.log("message published");
-// }, 100);
 
 // const app = express();
 

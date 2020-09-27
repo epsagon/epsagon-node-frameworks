@@ -4,11 +4,11 @@ const epsagon = require("epsagon-frameworks");
 const BunnyBus = require("@tenna-llc/bunnybus");
 var axios = require("axios");
 
-// epsagon.init({
-//   token: process.env.EPSAGON_TOKEN,
-//   appName: "itay-bunnybus-test",
-//   metadataOnly: false,
-// });
+epsagon.init({
+  token: process.env.EPSAGON_TOKEN,
+  appName: "itay-bunnybus-test",
+  metadataOnly: false,
+});
 
 const bunnyBus = new BunnyBus({
   hostname: "bonobo-01.rmq.cloudamqp.com",
@@ -33,7 +33,9 @@ async function subscribeHandlers() {
           // await sleep(200);
           epsagon.label("testKey", "testValue");
           console.log(message.comment);
-          await axios.get("http://dummy.restapiexample.com/api/v1/employees");
+          const res = await axios.get(
+            "http://dummy.restapiexample.com/api/v1/employees"
+          );
           await ack();
         },
       },

@@ -58,10 +58,10 @@ async function publishMessage() {
 
 subscribeHandlers();
 
-setInterval(() => {
-  publishMessage();
-  console.log("message published");
-}, 200);
+// setInterval(() => {
+//   publishMessage();
+//   console.log("message published");
+// }, 200);
 
 // const app = express();
 

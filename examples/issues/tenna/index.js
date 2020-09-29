@@ -42,6 +42,7 @@ async function publishMessage() {
 const operation = myArgs[0];
 const rate = myArgs[1];
 const period = myArgs[2];
+const epsagon = myArgs[3];
 
 if (operation == "publish" && rate && period) {
   // const promises = Array.apply(null, Array(rate)).map(function () {
@@ -69,19 +70,24 @@ if (operation == "publish" && rate && period) {
     console.log("batch published");
   }, period);
 } else if (operation === "subscribe") {
-  const epsagon = require("epsagon-frameworks");
-  epsagon.init({
-    token: process.env.EPSAGON_TOKEN,
-    appName: "itay-bunnybus-test",
-    metadataOnly: false,
-  });
+  if (epsagon) {
+    const epsagon = require("epsagon-frameworks");
+    epsagon.init({
+      token: process.env.EPSAGON_TOKEN,
+      appName: "itay-bunnybus-test",
+      metadataOnly: false,
+    });
+  }
+
   try {
     bunnyBus.subscribe({
       queue: "queue1",
       handlers: {
         "create-event": async ({ message, ack, epsagon }) => {
           // await sleep(200);
-          epsagon.label("testKey", "testValue");
+          if (epsagon) {
+            epsagon.label("testKey", "testValue");
+          }
           console.log("message consumed");
           // const res = await axios.get(
           //   "http://dummy.restapiexample.com/api/v1/employees"

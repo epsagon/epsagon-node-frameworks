@@ -85,9 +85,7 @@ if (operation == "publish" && rate && period) {
       handlers: {
         "create-event": async ({ message, ack, epsagon }) => {
           // await sleep(200);
-          if (epsagon) {
-            epsagon.label("testKey", "testValue");
-          }
+
           console.log("message consumed");
           axios.get("http://www.google.com");
           axios.get("http://www.google.com");

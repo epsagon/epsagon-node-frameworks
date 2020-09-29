@@ -10,7 +10,7 @@ var myArgs = process.argv.slice(2);
 
 const bunnyBus = new BunnyBus({
   // hostname: "localhost",
-  hostname: "	fat-coral.rmq.cloudamqp.com",
+  hostname: "fat-coral.rmq.cloudamqp.com",
   port: 5672,
   password: "6GpPOPXCjVVLlgcnA_nmuYm2DNj3U57c",
   username: "ehqhhctv",

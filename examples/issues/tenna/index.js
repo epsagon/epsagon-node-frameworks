@@ -64,6 +64,21 @@ if (operation === "publish") {
       publishMessage(),
       publishMessage(),
       publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
     ]);
 
     console.log("batch published");

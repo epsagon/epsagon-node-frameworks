@@ -10,7 +10,16 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const { EPSAGON_HEADER } = require('../http.js');
-
+/**
+ * Post given trace to epsagon's infrastructure.
+ * @param {*} time The trace data to send.
+ * @param {*} callback The trace data to send.
+ *  */
+function sleep(time, callback) {
+    const stop = new Date().getTime();
+    while (new Date().getTime() < stop + time) {}
+    callback();
+}
 /**
  * acts as a middleware for `BunnyBus consumer messages
  * @param {object} config data of the bunnybus
@@ -76,6 +85,9 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
                 throw err;
             }).finally(() => {
                 eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
+                sleep(1000, () => {
+                    console.log('Finished sleeping');
+                });
                 tracer.sendTrace(() => {});
             });
         } else {

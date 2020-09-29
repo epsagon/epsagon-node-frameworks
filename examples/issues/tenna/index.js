@@ -64,6 +64,8 @@ if (operation === "publish") {
 } else if (operation === "subscribe") {
   if (epsagon === "epsagon") {
     const epsagon = require("epsagon-frameworks");
+    // const epsagon = require("../../../src/index");
+
     console.log("init epsagon");
 
     epsagon.init({

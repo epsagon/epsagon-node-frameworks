@@ -33,7 +33,7 @@ async function publishMessage() {
         message: "Test message",
       },
     });
-    console.log("message published");
+    console.log("published message");
   } catch (err) {
     console.log("failed to publish", err);
   }
@@ -44,11 +44,27 @@ const rate = myArgs[1];
 const period = myArgs[2];
 
 if (operation == "publish" && rate && period) {
-  const promises = Array.apply(null, Array(rate)).map(function () {
-    return publishMessage();
-  });
+  // const promises = Array.apply(null, Array(rate)).map(function () {
+  //   return publishMessage();
+  // });
   setInterval(async () => {
-    Promise.all(promises);
+    await Promise.all([
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+      publishMessage(),
+    ]);
 
     console.log("batch published");
   }, period);

@@ -14,7 +14,7 @@ const bunnyBus = new BunnyBus({
   password: "6GpPOPXCjVVLlgcnA_nmuYm2DNj3U57c",
   username: "ehqhhctv",
   vhost: "ehqhhctv",
-  prefetch: 1,
+  prefetch: 50,
 });
 
 // function sleep(ms) {

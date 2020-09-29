@@ -6,8 +6,7 @@ require("log-timestamp");
 
 // const yargs = require("yargs");
 
-var myArgs = process.argv.slice(5);
-const prefetch = myArgs[4];
+var myArgs = process.argv.slice(2);
 const bunnyBus = new BunnyBus({
   // hostname: "localhost",
   hostname: "fat-coral.rmq.cloudamqp.com",
@@ -15,7 +14,7 @@ const bunnyBus = new BunnyBus({
   password: "6GpPOPXCjVVLlgcnA_nmuYm2DNj3U57c",
   username: "ehqhhctv",
   vhost: "ehqhhctv",
-  prefetch: prefetch,
+  prefetch: 1,
 });
 
 // function sleep(ms) {
@@ -44,7 +43,7 @@ const rate = myArgs[1];
 const period = myArgs[2];
 const epsagon = myArgs[3];
 
-if (operation == "publish" && rate && period) {
+if (operation === "publish") {
   // const promises = Array.apply(null, Array(rate)).map(function () {
   //   return publishMessage();
   // });

@@ -14,6 +14,8 @@
     "axios": "^0.20.0",
     "bunnybus": "^4.2.1",
     "epsagon-frameworks": "^1.23.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "log-timestamp": "^0.3.0",
+    "yargs": "^16.0.3"
   }
 }

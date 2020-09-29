@@ -48,39 +48,7 @@ if (operation === "publish") {
   //   return publishMessage();
   // });
   setInterval(async () => {
-    await Promise.all([
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-      publishMessage(),
-    ]);
-
+    await publishMessage();
     console.log("batch published");
   }, period);
 } else if (operation === "subscribe") {

@@ -56,18 +56,13 @@ if (operation === "publish") {
   //   return publishMessage();
   // });
   setInterval(async () => {
-    await publishMessage(bunnyBus);
-    await publishMessage(bunnyBus);
-    await publishMessage(bunnyBus);
-    await publishMessage(bunnyBus);
-    await publishMessage(bunnyBus);
+    publishMessage(bunnyBus);
+    publishMessage(bunnyBus);
+    publishMessage(bunnyBus);
+    publishMessage(bunnyBus2);
+    publishMessage(bunnyBus2);
 
-    await publishMessage(bunnyBus2);
-    await publishMessage(bunnyBus2);
-    await publishMessage(bunnyBus2);
-
-    await publishMessage(bunnyBus2);
-    await publishMessage(bunnyBus2);
+    publishMessage(bunnyBus2);
 
     console.log("batch published");
   }, period);

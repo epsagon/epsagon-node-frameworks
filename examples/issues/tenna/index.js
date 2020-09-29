@@ -10,11 +10,11 @@ var myArgs = process.argv.slice(2);
 
 const bunnyBus = new BunnyBus({
   // hostname: "localhost",
-  hostname: "adorable-hawk-01.rmq.cloudamqp.com",
+  hostname: "	fat-coral.rmq.cloudamqp.com",
   port: 5672,
-  password: "I_RVvw5641WUJFw9Kqjiwi80axL1cZLv",
-  username: "lcrliltv",
-  vhost: "lcrliltv",
+  password: "6GpPOPXCjVVLlgcnA_nmuYm2DNj3U57c",
+  username: "ehqhhctv",
+  vhost: "ehqhhctv",
   prefetch: 50,
 });
 

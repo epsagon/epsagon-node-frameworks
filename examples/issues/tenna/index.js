@@ -89,9 +89,9 @@ if (operation == "publish" && rate && period) {
             epsagon.label("testKey", "testValue");
           }
           console.log("message consumed");
-          // const res = await axios.get(
-          //   "http://dummy.restapiexample.com/api/v1/employees"
-          // );
+          const res = await axios.get("http://www.google.com");
+          const res = await axios.get("http://www.google.com");
+
           await ack();
         },
       },

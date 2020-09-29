@@ -6,7 +6,7 @@ require("log-timestamp");
 
 // const yargs = require("yargs");
 
-var myArgs = process.argv.slice(2);
+var myArgs = process.argv.slice(4);
 const prefetch = myArgs[4];
 const bunnyBus = new BunnyBus({
   // hostname: "localhost",

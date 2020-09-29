@@ -16,30 +16,31 @@ const bunnyBus = new BunnyBus({
   vhost: "ehqhhctv",
   prefetch: 50,
 });
-const bunnyBus2 = new BunnyBus({
-  // hostname: "localhost",
-  hostname: "fat-coral.rmq.cloudamqp.com",
-  port: 5672,
-  password: "6GpPOPXCjVVLlgcnA_nmuYm2DNj3U57c",
-  username: "ehqhhctv",
-  vhost: "ehqhhctv",
-  prefetch: 50,
-});
+
 // function sleep(ms) {
 //   return new Promise((resolve) => {
 //     setTimeout(resolve, ms);
 //   });
 // }
 
-async function publishMessage(bunnyBus) {
+async function publishMessage() {
   try {
-    bunnyBus.publish({
-      message: {
-        event: "create-event",
-        options: { routeKey: "queue1" },
-        message: "Test message",
+    bunnyBus.publish([
+      {
+        message: {
+          event: "create-event",
+          options: { routeKey: "queue1" },
+          message: "Test message",
+        },
       },
-    });
+      {
+        message: {
+          event: "create-event",
+          options: { routeKey: "queue1" },
+          message: "Test message",
+        },
+      },
+    ]);
     console.log("published message");
   } catch (err) {
     console.log("failed to publish", err);
@@ -56,8 +57,7 @@ if (operation === "publish") {
   //   return publishMessage();
   // });
   setInterval(async () => {
-    await publishMessage(bunnyBus);
-    await publishMessage(bunnyBus2);
+    await publishMessage();
 
     console.log("batch published");
   }, period);

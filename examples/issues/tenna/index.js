@@ -57,11 +57,6 @@ if (operation === "publish") {
   // });
   setInterval(async () => {
     publishMessage(bunnyBus);
-    publishMessage(bunnyBus);
-    publishMessage(bunnyBus);
-    publishMessage(bunnyBus2);
-    publishMessage(bunnyBus2);
-
     publishMessage(bunnyBus2);
 
     console.log("batch published");

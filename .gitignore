@@ -1,6 +1,6 @@
 .idea/
 node_modules/
-dist/
+# dist/
 examples/issues/tenna/.env
 .vscode/launch.json
 .vscode/settings.json

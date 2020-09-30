@@ -14,7 +14,7 @@ const bunnyBus = new BunnyBus({
   password: "6GpPOPXCjVVLlgcnA_nmuYm2DNj3U57c",
   username: "ehqhhctv",
   vhost: "ehqhhctv",
-  prefetch: 50,
+  // prefetch: 50,
 });
 const bunnyBus2 = new BunnyBus({
   // hostname: "localhost",

@@ -16,6 +16,7 @@ const { EPSAGON_HEADER } = require('../http.js');
  * acts as a middleware for `consumer.run()`
  * @param {object} message the messages param to send
  * @param {function} originalHandler original consumer function
+ * @returns {Object} runnerResult Promise or result object
  */
 function kafkaMiddleware(message, originalHandler) {
     let originalHandlerSyncErr;

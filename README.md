@@ -18,21 +18,37 @@ This package provides tracing to Node.js applications for the collection of dist
 
 ## Contents
 
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Auto-tracing](#auto-tracing)
-  - [Calling the SDK](#calling-the-sdk)
-  - [Tagging Traces](#tagging-traces)
-  - [Custom Errors](#custom-errors)
-  - [Filter Sensitive Data](#filter-sensitive-data)
-  - [Ignore Endpoints](#ignore-endpoints)
-  - [Trace URL](#trace-url)
-- [Frameworks](#frameworks)
-- [Integrations](#integrations)
-- [Configuration](#configuration)
-- [Getting Help](#getting-help)
-- [Opening Issues](#opening-issues)
-- [License](#license)
+- [Epsagon Tracing for Node.js frameworks](#epsagon-tracing-for-nodejs-frameworks)
+  - [Contents](#contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Auto-tracing](#auto-tracing)
+    - [Calling the SDK](#calling-the-sdk)
+    - [Tagging Traces](#tagging-traces)
+    - [Custom Errors](#custom-errors)
+    - [Custom Warnings](#custom-warnings)
+    - [Filter Sensitive Data](#filter-sensitive-data)
+    - [Ignore Endpoints](#ignore-endpoints)
+    - [Trace URL](#trace-url)
+  - [Frameworks](#frameworks)
+    - [Express](#express)
+    - [Hapi](#hapi)
+    - [Koa](#koa)
+    - [KafkaJS](#kafkajs)
+    - [kafka-node](#kafka-node)
+    - [PubSub](#pubsub)
+    - [SQS Consumer](#sqs-consumer)
+    - [amqplib](#amqplib)
+    - [amqp](#amqp)
+    - [bunnybus](#bunnybus)
+    - [NATS](#nats)
+    - [WS (Websocket)](#ws-websocket)
+    - [Generic](#generic)
+  - [Integrations](#integrations)
+  - [Configuration](#configuration)
+  - [Getting Help](#getting-help)
+  - [Opening Issues](#opening-issues)
+  - [License](#license)
 
 
 ## Installation
@@ -87,6 +103,8 @@ Add the following call inside your code:
 epsagon.label('key', 'value');
 epsagon.label('userId', userId);
 ```
+
+
 
 In some [frameworks](#frameworks) tagging can be done in different ways.
 

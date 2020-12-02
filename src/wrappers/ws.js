@@ -45,11 +45,21 @@ function websocketEmitterMiddleware(message, originalHandler, requestFunctionThi
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'
         );
+        eventInterface.createTraceIdMetadata(nodeEvent);
         let runnerResult;
         // Injecting SDK layer to the runner event
+        const {
+            label, setError, setWarning, getTraceUrl,
+        } = tracer;
         tracer.addRunner(nodeEvent);
+
         try {
-            runnerResult = originalHandler(message);
+            runnerResult = originalHandler(message, {
+                label,
+                setError,
+                setWarning,
+                getTraceUrl,
+            });
         } catch (err) {
             originalHandlerSyncErr = err;
         }

@@ -527,12 +527,14 @@ epsagon.init({
 });
 ```
 
-Tagging traces or setting custom errors can be by:
+Tagging traces, setting custom errors/warnings or get current trace url can be by:
 
 ```javascript
-socket.on('message', (message) => {
-    message.epsagon.label('key', 'value');
-    message.epsagon.setError(Error('My custom error'));
+socket.on('message', (message, epsagonSdk) => {
+    epsagonSdk.label('key', 'value');
+    epsagonSdk.setError(Error('My custom error'));
+    epsagonSdk.setWarning(Error('My custom warning'));
+    console.log('Epsagon trace URL:', epsagonSdk.getTraceUrl())
 }) 
 ```
 

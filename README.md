@@ -187,8 +187,9 @@ The following frameworks are supported by Epsagon Frameworks.
 |[Express](#express)                     |`>=3.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Hapi](#hapi)                           |`>=17.0.0`                 |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Koa](#koa)                             |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[restify](#restify)                     |`>=7.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[KafkaJS](#kafkajs)                     |`>=1.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
-|[kafka-node](#kafka-node)                     |`>=3.0.0`            |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[kafka-node](#kafka-node)               |`>=3.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[PubSub](#pubsub)                       |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[SQS Consumer](#sqs-consumer)           |`>=4.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[amqplib](#amqplib)                     |`>=0.5.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
@@ -282,6 +283,33 @@ app.use(async ctx => {
   ctx.epsagon.label('key', 'value');
   ctx.epsagon.setError(Error('My custom error'));
 });
+```
+
+### restify
+
+Tracing restify application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the application is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+function respond(req, res, next) {
+  req.epsagon.label('key', 'value');
+  req.epsagon.setError(Error('My custom error'));
+}
 ```
 
 ### KafkaJS

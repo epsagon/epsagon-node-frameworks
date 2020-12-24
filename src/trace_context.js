@@ -18,9 +18,9 @@ const weaks = new WeakMap();
  */
 function destroyAsync(asyncId, forceDelete = false) {
     if (forceDelete) {
-        const asyncTrace = tracers[asyncId];
+        // const asyncTrace = tracers[asyncId];
         Object.entries(tracers).forEach(([key, tracer]) => {
-            if (asyncTrace === tracer) {
+            if (tracers[asyncId] === tracer) {
                 delete tracers[key];
             }
         });

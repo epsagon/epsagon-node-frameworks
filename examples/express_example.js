@@ -1,8 +1,7 @@
 const express = require('express');
-const epsagon = require('epsagon-frameworks');
+const epsagon = require('../src/index');
 
 epsagon.init({
-    token: 'my-secret-token',
     appName: 'my-app-name',
     metadataOnly: false,
 });

@@ -10,25 +10,45 @@
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
 # Epsagon Tracing for Node.js frameworks
+
+![Trace](trace.png)
+
+
 This package provides tracing to Node.js applications for the collection of distributed tracing and performance metrics in [Epsagon](https://app.epsagon.com/?utm_source=github).
 
 ## Contents
 
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Auto-tracing](#auto-tracing)
-  - [Calling the SDK](#calling-the-sdk)
-  - [Tagging Traces](#tagging-traces)
-  - [Custom Errors](#custom-errors)
-  - [Filter Sensitive Data](#filter-sensitive-data)
-  - [Ignore Endpoints](#ignore-endpoints)
-  - [Trace URL](#trace-url)
-- [Frameworks](#frameworks)
-- [Integrations](#integrations)
-- [Configuration](#configuration)
-- [Getting Help](#getting-help)
-- [Opening Issues](#opening-issues)
-- [License](#license)
+- [Epsagon Tracing for Node.js frameworks](#epsagon-tracing-for-nodejs-frameworks)
+  - [Contents](#contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Auto-tracing](#auto-tracing)
+    - [Calling the SDK](#calling-the-sdk)
+    - [Tagging Traces](#tagging-traces)
+    - [Custom Errors](#custom-errors)
+    - [Custom Warnings](#custom-warnings)
+    - [Filter Sensitive Data](#filter-sensitive-data)
+    - [Ignore Endpoints](#ignore-endpoints)
+    - [Trace URL](#trace-url)
+  - [Frameworks](#frameworks)
+    - [Express](#express)
+    - [Hapi](#hapi)
+    - [Koa](#koa)
+    - [KafkaJS](#kafkajs)
+    - [kafka-node](#kafka-node)
+    - [PubSub](#pubsub)
+    - [SQS Consumer](#sqs-consumer)
+    - [amqplib](#amqplib)
+    - [amqp](#amqp)
+    - [bunnybus](#bunnybus)
+    - [NATS](#nats)
+    - [WS (Websocket)](#ws-websocket)
+    - [Generic](#generic)
+  - [Integrations](#integrations)
+  - [Configuration](#configuration)
+  - [Getting Help](#getting-help)
+  - [Opening Issues](#opening-issues)
+  - [License](#license)
 
 
 ## Installation
@@ -84,6 +104,8 @@ epsagon.label('key', 'value');
 epsagon.label('userId', userId);
 ```
 
+
+
 In some [frameworks](#frameworks) tagging can be done in different ways.
 
 ### Custom Errors
@@ -100,6 +122,22 @@ try {
 
 // Or manually specify Error object
 epsagon.setError(Error('My custom error'));
+```
+
+### Custom Warnings
+
+This API allows you to flag the trace with a warning and also enables more flexible alerting
+
+Add the following call inside your code:
+```javascript
+try {
+  // something bad happens
+} catch (err) {
+  epsagon.setWarning(err);
+}
+
+// Or manually specify Error object
+epsagon.setWarning(Error('My custom error'));
 ```
 
 In some [frameworks](#frameworks) custom errors can be declared in different ways.
@@ -149,8 +187,9 @@ The following frameworks are supported by Epsagon Frameworks.
 |[Express](#express)                     |`>=3.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Hapi](#hapi)                           |`>=17.0.0`                 |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Koa](#koa)                             |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[restify](#restify)                     |`>=7.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[KafkaJS](#kafkajs)                     |`>=1.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
-|[kafka-node](#kafka-node)                     |`>=3.0.0`            |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[kafka-node](#kafka-node)               |`>=3.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[PubSub](#pubsub)                       |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[SQS Consumer](#sqs-consumer)           |`>=4.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[amqplib](#amqplib)                     |`>=0.5.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
@@ -244,6 +283,33 @@ app.use(async ctx => {
   ctx.epsagon.label('key', 'value');
   ctx.epsagon.setError(Error('My custom error'));
 });
+```
+
+### restify
+
+Tracing restify application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the application is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+function respond(req, res, next) {
+  req.epsagon.label('key', 'value');
+  req.epsagon.setError(Error('My custom error'));
+}
 ```
 
 ### KafkaJS
@@ -489,12 +555,14 @@ epsagon.init({
 });
 ```
 
-Tagging traces or setting custom errors can be by:
+Tagging traces, setting custom errors/warnings or get current trace url can be by:
 
 ```javascript
-socket.on('message', (message) => {
-    message.epsagon.label('key', 'value');
-    message.epsagon.setError(Error('My custom error'));
+socket.on('message', (message, epsagonSdk) => {
+    epsagonSdk.label('key', 'value');
+    epsagonSdk.setError(Error('My custom error'));
+    epsagonSdk.setWarning(Error('My custom warning'));
+    console.log('Epsagon trace URL:', epsagonSdk.getTraceUrl())
 }) 
 ```
 
@@ -574,6 +642,7 @@ Advanced options can be configured as a parameter to the init() method or as env
 |-                  |EPSAGON_PROPAGATE_NATS_ID  |Boolean|`false`      |Whether to propagate a correlation ID in NATS.io calls for distributed tracing     |
 |-                  |EPSAGON_ADD_NODE_PATH      |String |-            |List of folders to looks for node_modules when patching libraries. Separated by `:`|
 |-                  |EPSAGON_DNS_INSTRUMENTATION|Boolean|`false`      |Whether to capture `dns` calls into the trace                                      |
+|-                  |EPSAGON_ALLOW_NO_ROUTE|Boolean|`false`      |Whether to capture non-matched route requests in Express.js                                      |
 |-                  |EPSAGON_LOGGING_TRACING_ENABLED|Boolean|`true`      |whether to add an Epsagon ID to the logs in order to correlate traces to logs in the dashboard|                                       |
 
 

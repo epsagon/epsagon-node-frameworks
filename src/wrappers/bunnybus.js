@@ -62,6 +62,8 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
             'node_function', runnerName, 'execute', 'runner'
         );
 
+        eventInterface.createTraceIdMetadata(nodeEvent);
+
         try {
             runnerResult = callback(handlerParams);
         } catch (err) {

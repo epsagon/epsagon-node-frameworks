@@ -8,6 +8,7 @@ const {
     tracer,
     utils,
     moduleUtils,
+    eventInterface,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const expressRunner = require('../runners/express.js');
@@ -118,7 +119,7 @@ function getWrappedNext(args) {
 
 
 /**
- * Wrapts clients middleware
+ * Wraps clients middleware
  * @param {*} middleware - middleware to wrap
  * @returns {function} wrapped middleware
  */
@@ -127,6 +128,12 @@ function middlewareWrapper(middleware) {
     // length checks function argument quantity
     if (middleware.length === 4) {
         return function internalMiddlewareWrapper(error, req, res, next) {
+            // Capture the error into the trace
+            const tracerObj = tracer.getTrace();
+            if (tracerObj && tracerObj.currRunner) {
+                eventInterface.setException(tracerObj.currRunner, error);
+            }
+
             return middleware.apply(this, getWrappedNext(arguments));
         };
     }

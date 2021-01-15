@@ -16,9 +16,11 @@ const { EPSAGON_HEADER } = require('../http.js');
  * acts as a middleware for `consumer.run()`
  * @param {object} message the messages param to send
  * @param {function} originalHandler original consumer function
+ * @returns {Object} runnerResult Promise or result object
  */
 function kafkaMiddleware(message, originalHandler) {
     let originalHandlerSyncErr;
+    let runnerResult;
     try {
         // Initialize tracer and runner.
         tracer.restart();
@@ -62,7 +64,6 @@ function kafkaMiddleware(message, originalHandler) {
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'
         );
-        let runnerResult;
         try {
             runnerResult = originalHandler(message);
         } catch (err) {
@@ -96,6 +97,7 @@ function kafkaMiddleware(message, originalHandler) {
     if (originalHandlerSyncErr) {
         throw originalHandlerSyncErr;
     }
+    return runnerResult;
 }
 
 

@@ -100,6 +100,10 @@ function finishRunner(expressEvent, res, req, startTime) {
         eventInterface.addToMetadata(expressEvent, {}, { params: req.params });
     }
 
+    if (req.body && Object.keys(req.body).length) {
+        eventInterface.addToMetadata(expressEvent, {}, { request_data: req.body });
+    }
+
     if (req.route) {
         const routePath = (req.route.path instanceof Array) ?
             findCalledParameteredPath(req) : req.route.path;

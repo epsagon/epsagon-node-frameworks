@@ -45,9 +45,21 @@ function websocketEmitterMiddleware(message, originalHandler, requestFunctionThi
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'
         );
+        eventInterface.createTraceIdMetadata(nodeEvent);
         let runnerResult;
+        // Injecting SDK layer to the runner event
+        const {
+            label, setError, setWarning, getTraceUrl,
+        } = tracer;
+        tracer.addRunner(nodeEvent);
+
         try {
-            runnerResult = originalHandler(message, {});
+            runnerResult = originalHandler(message, {
+                label,
+                setError,
+                setWarning,
+                getTraceUrl,
+            });
         } catch (err) {
             originalHandlerSyncErr = err;
         }
@@ -57,6 +69,8 @@ function websocketEmitterMiddleware(message, originalHandler, requestFunctionThi
         }
         // Handle and finalize async user function.
         if (utils.isPromise(runnerResult)) {
+            // Updating the current runner with the runner result Promise
+            tracer.addPendingEvent(nodeEvent, runnerResult);
             let originalHandlerAsyncError;
             runnerResult.catch((err) => {
                 originalHandlerAsyncError = err;
@@ -70,7 +84,6 @@ function websocketEmitterMiddleware(message, originalHandler, requestFunctionThi
             eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
             tracer.sendTrace(() => {});
         }
-        tracer.addRunner(nodeEvent, runnerResult);
     } catch (err) {
         tracer.addException(err);
     }

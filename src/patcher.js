@@ -55,6 +55,6 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
         redisPatcher,
         wsPatcher,
         restifyPatcher,
-        mysqlPatcher
+        mysqlPatcher,
     ].forEach(patch);
 }

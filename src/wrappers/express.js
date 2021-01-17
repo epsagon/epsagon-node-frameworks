@@ -12,7 +12,6 @@ const {
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const expressRunner = require('../runners/express.js');
-const { setAsyncReference } = require('../trace_context');
 const { shouldIgnore } = require('../http.js');
 const { methods } = require('../consts');
 
@@ -26,7 +25,7 @@ function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
     utils.debugLog('Epsagon Express - starting express middleware');
     const originalAsyncId = asyncHooks.executionAsyncId();
-    
+
     if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
         traceContext.destroyAsync(originalAsyncId, true);

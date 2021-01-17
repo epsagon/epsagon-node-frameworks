@@ -27,6 +27,7 @@ function expressMiddleware(req, res, next) {
 
     if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
+        traceContext.destroyAsync(asyncHooks.executionAsyncId(), true);
         next();
         return;
     }
@@ -47,6 +48,7 @@ function expressMiddleware(req, res, next) {
                     (!req.route)
                 ) {
                     utils.debugLog('Epsagon Express - req.route not set - not reporting trace');
+                    traceContext.destroyAsync(asyncHooks.executionAsyncId(), true);
                     return;
                 }
                 try {
@@ -75,6 +77,7 @@ function expressMiddleware(req, res, next) {
     } catch (err) {
         utils.debugLog('Epsagon Express - general catch');
         utils.debugLog(err);
+        traceContext.destroyAsync(asyncHooks.executionAsyncId(), true);
     } finally {
         utils.debugLog('Epsagon Express - general finally');
         next();

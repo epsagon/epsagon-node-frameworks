@@ -36,7 +36,7 @@ function mysqlQueryWrapper(wrappedFunction) {
             let overrideInnerCallback = false;
 
             const originalAsyncId = asyncHooks.executionAsyncId();
-
+            
             if (sql.onResult) {
                 params = sql.values;
                 callback = sql.onResult;
@@ -66,12 +66,38 @@ function mysqlQueryWrapper(wrappedFunction) {
                 sql._callback = patchedCallback;
             }
 
-            return wrappedFunction.apply(this, [sql, params, patchedCallback]);
+            return wrappedFunction.apply(this, [sql, params, (callback && !overrideInnerCallback) ? patchedCallback: cb]);
         } catch (error) {
             tracer.addException(error);
         }
 
         return wrappedFunction.apply(this, [sql, values, cb]);
+    };
+}
+
+/**
+ * Wraps the redis' send command function with tracing
+ * @param {Function} wrappedFunction The wrapped function from redis module
+ * @returns {Function} The wrapped function
+ */
+function mysqlGetConnectionWrapper(wrappedFunction) {
+    return function internalMysqlGetConnectionWrapper(callback) {
+        let patchedCallback = callback;
+        try {
+            const originalAsyncId = asyncHooks.executionAsyncId();
+
+            patchedCallback = (error, rconnection) => {
+                setAsyncReference(originalAsyncId);
+
+                if (callback) {
+                    callback(error, rconnection);
+                }
+            };
+        } catch (error) {
+            tracer.addException(error);
+        }
+
+        return wrappedFunction.apply(this, [patchedCallback]);
     };
 }
 
@@ -99,6 +125,13 @@ module.exports = {
             'query',
             mysqlQueryWrapper,
             mysqlConnection => mysqlConnection.prototype
+        );
+    
+        moduleUtils.patchModule(
+            'mysql/lib/Pool.js',
+            'getConnection',
+            mysqlGetConnectionWrapper,
+            mysqlPool => mysqlPool.prototype
         );
     },
 };

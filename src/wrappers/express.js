@@ -25,7 +25,7 @@ function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
     utils.debugLog('Epsagon Express - starting express middleware');
     const originalAsyncId = asyncHooks.executionAsyncId();
-
+    traceContext.setAsyncReference(originalAsyncId, true);
     if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
         traceContext.destroyAsync(originalAsyncId, true);
@@ -41,6 +41,7 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('Epsagon Express - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
+            traceContext.setAsyncReference(originalAsyncId, true);
             utils.debugLog('Epsagon Express - creating response promise');
             res.once('finish', function handleResponse() {
                 utils.debugLog('Epsagon Express - got finish event, handling response');

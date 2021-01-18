@@ -24,9 +24,10 @@ const { methods } = require('../consts');
 function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
     utils.debugLog('Epsagon Express - starting express middleware');
-
+    const originalAsyncId = asyncHooks.executionAsyncId();
     if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
+        traceContext.destroyAsync(originalAsyncId, true);
         next();
         return;
     }
@@ -39,6 +40,7 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('Epsagon Express - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
+            traceContext.setAsyncReference(originalAsyncId, true);
             utils.debugLog('Epsagon Express - creating response promise');
             res.once('finish', function handleResponse() {
                 utils.debugLog('Epsagon Express - got finish event, handling response');
@@ -47,6 +49,7 @@ function expressMiddleware(req, res, next) {
                     (!req.route)
                 ) {
                     utils.debugLog('Epsagon Express - req.route not set - not reporting trace');
+                    traceContext.destroyAsync(originalAsyncId, true);
                     return;
                 }
                 try {
@@ -58,7 +61,7 @@ function expressMiddleware(req, res, next) {
                 utils.debugLog('Epsagon Express - sending trace');
                 tracer.sendTrace(() => {}).then(resolve).then(() => {
                     utils.debugLog('Epsagon Express - trace sent + request resolved');
-                    traceContext.destroyAsync(asyncHooks.executionAsyncId(), true);
+                    traceContext.destroyAsync(originalAsyncId, true);
                 });
             });
         });
@@ -75,6 +78,7 @@ function expressMiddleware(req, res, next) {
     } catch (err) {
         utils.debugLog('Epsagon Express - general catch');
         utils.debugLog(err);
+        traceContext.destroyAsync(originalAsyncId, true);
     } finally {
         utils.debugLog('Epsagon Express - general finally');
         next();

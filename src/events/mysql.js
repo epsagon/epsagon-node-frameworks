@@ -36,7 +36,7 @@ function mysqlQueryWrapper(wrappedFunction) {
             let overrideInnerCallback = false;
 
             const originalAsyncId = asyncHooks.executionAsyncId();
-            
+
             if (sql.onResult) {
                 params = sql.values;
                 callback = sql.onResult;
@@ -66,7 +66,7 @@ function mysqlQueryWrapper(wrappedFunction) {
                 sql._callback = patchedCallback;
             }
 
-            return wrappedFunction.apply(this, [sql, params, (callback && !overrideInnerCallback) ? patchedCallback: cb]);
+            return wrappedFunction.apply(this, [sql, params, (callback && !overrideInnerCallback) ? patchedCallback : cb]); // eslint-disable-line
         } catch (error) {
             tracer.addException(error);
         }
@@ -126,7 +126,7 @@ module.exports = {
             mysqlQueryWrapper,
             mysqlConnection => mysqlConnection.prototype
         );
-    
+
         moduleUtils.patchModule(
             'mysql/lib/Pool.js',
             'getConnection',

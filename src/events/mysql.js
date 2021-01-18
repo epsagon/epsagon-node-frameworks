@@ -70,6 +70,7 @@ function mysqlQueryWrapper(wrappedFunction) {
         } catch (error) {
             tracer.addException(error);
         }
+
         return wrappedFunction.apply(this, [sql, values, cb]);
     };
 }

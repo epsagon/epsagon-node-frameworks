@@ -20,8 +20,10 @@ const pool = mysql.createPool(
   waitForConnections: true,
   charset:"UTF8",
   host     : 'localhost',
-  user     : 'root',
-  password : 'secret',
+  user: 'debian-sys-maint',
+  password: 'BXrw158wCBVXJZu0',
+//   user     : 'root',
+//   password : 'secret',
   database : 'mysql'
 })
 

@@ -46,7 +46,6 @@ app.get('/redis_sql_connection', (req, res) => {
         if (err) throw err;
         connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
             if (error) throw error;
-            console.log('The solution is: ', results[0].solution);
             res.send('result from connection')
         });
     })
@@ -57,7 +56,6 @@ app.get('/redis_sql_pool', (req, res) => {
         if (err) throw err;
         pool.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
             if (error) throw error;
-            console.log('The solution is: ', results[0].solution);
             res.send('result from pool')
         });        
     })
@@ -76,7 +74,6 @@ app.get('/redis_sql_pool_connection', (req, res) => {
 
                 // Handle error after the release.
                 if (error) throw error;
-                console.log('The solution is: ', results[0].solution);
                 res.send('result from pool coonection')
             });
         });

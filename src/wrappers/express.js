@@ -224,8 +224,10 @@ function expressListenWrapper(wrappedFunction) {
                     message: err.message,
                     stack: err.stack,
                 });
+                next(err);
+            } else {
+                next();
             }
-            next();
         });
         return result;
     };

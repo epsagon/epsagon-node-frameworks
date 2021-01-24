@@ -23,6 +23,10 @@ services:
       - MYSQL_HOST=mysql
       - MYSQL_DB=mysql
       - MYSQL_USER=root
+      - EPSAGON_DEBUG=true
+      - EPSAGON_SEND_TIMEOUT_SEC=10
+      # - EPSAGON_ADD_NODE_PATH=/usr/src/app/node_modules
+      # - EPSAGON_SEND_BATCH=true
     links:
       - mysql
       - redis

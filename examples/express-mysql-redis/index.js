@@ -1,5 +1,5 @@
 const express = require('express');
-const epsagon = require('epsagon');
+const epsagon = require('epsagon-frameworks');
 const redis = require('redis');
 const mysql = require('mysql');
 const app = express();

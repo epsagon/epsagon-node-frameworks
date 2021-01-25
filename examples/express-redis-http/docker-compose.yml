@@ -1,0 +1,21 @@
+version: "3"
+services:
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+  server:
+    ports:
+      - "3000:3000"
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EPSAGON_DEBUG=true
+      - EPSAGON_SEND_TIMEOUT_SEC=10
+      # - EPSAGON_ADD_NODE_PATH=/usr/src/app/node_modules
+      # - EPSAGON_SEND_BATCH=true
+    links:
+      - redis

@@ -19,3 +19,4 @@ services:
       # - EPSAGON_SEND_BATCH=true
     links:
       - redis
+    mem_limit: 1g

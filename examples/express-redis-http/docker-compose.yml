@@ -16,7 +16,6 @@ services:
       - EPSAGON_DEBUG=true
       - EPSAGON_SEND_TIMEOUT_SEC=10
       # - EPSAGON_ADD_NODE_PATH=/usr/src/app/node_modules
-      # - EPSAGON_SEND_BATCH=true
+      - EPSAGON_SEND_BATCH=true
     links:
       - redis
-    mem_limit: 1g

@@ -1,5 +1,5 @@
 const express = require('express');
-// const epsagon = require('epsagon-frameworks');
+const epsagon = require('epsagon-frameworks');
 // const epsagon = require('../../src/index');
 const redis = require('redis');
 const mysql = require('mysql');
@@ -122,13 +122,13 @@ const host = process.env.REDIS_HOST || 'localhost';
 const redisPort = process.env.REDIS_PORT || 6379;
 const client = redis.createClient(redisPort, host, {});
 
-// epsagon.init({
-//     token: 'e9ea2287-c552-4891-8639-b6e268b01c78',
-//     appName: 'haim-test',
-//     ignoredKeys:['password*'], // Ignore PII keys, properties
-//     metadataOnly: false,
-//     sendTimeout: 2000
-//   });
+epsagon.init({
+    token: 'e9ea2287-c552-4891-8639-b6e268b01c78',
+    appName: 'haim-test',
+    ignoredKeys:['password*'], // Ignore PII keys, properties
+    metadataOnly: false,
+    sendTimeout: 2000
+  });
 
 app.get('/redis_sql_pool', (req, res) => {
     client.get('test', (err, result)  => {

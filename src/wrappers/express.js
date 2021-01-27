@@ -23,6 +23,7 @@ const { methods } = require('../consts');
  */
 function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
+    traceContext.setMainReference();
     utils.debugLog('[express] - starting express middleware');
     const tracerObj = tracer.getTrace();
     if (!tracerObj) {
@@ -31,7 +32,6 @@ function expressMiddleware(req, res, next) {
     const originalAsyncId = asyncHooks.executionAsyncId();
     if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
-        traceContext.destroyAsync(originalAsyncId, true);
         next();
         return;
     }
@@ -44,16 +44,16 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('[express] - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
-            traceContext.setAsyncReference(originalAsyncId, true);
+            traceContext.setAsyncReference(originalAsyncId);
             utils.debugLog('[express] - creating response promise');
             res.once('finish', function handleResponse() {
+                traceContext.setMainReference();
                 utils.debugLog('[express] - got finish event, handling response');
                 if (
                     ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
                     (!req.route)
                 ) {
                     utils.debugLog('[express] - req.route not set - not reporting trace');
-                    traceContext.destroyAsync(originalAsyncId, true);
                     return;
                 }
                 try {
@@ -65,7 +65,6 @@ function expressMiddleware(req, res, next) {
                 utils.debugLog('[express] - sending trace');
                 tracer.sendTrace(() => {}, tracerObj).then(resolve).then(() => {
                     utils.debugLog('[express] - trace sent + request resolved');
-                    traceContext.destroyAsync(originalAsyncId, true);
                 });
             });
         });
@@ -82,10 +81,10 @@ function expressMiddleware(req, res, next) {
     } catch (err) {
         utils.debugLog('[express] - general catch');
         utils.debugLog(err);
-        traceContext.destroyAsync(originalAsyncId, true);
     } finally {
         utils.debugLog('[express] - general finally');
         next();
+        traceContext.setMainReference(false);
     }
 }
 
@@ -104,9 +103,8 @@ function nextWrapper(next) {
             utils.debugLog(error);
         }
 
-        traceContext.setAsyncReference(asyncId, true);
+        traceContext.setAsyncReference(asyncId);
         const result = originalNext(...arguments);
-        traceContext.setAsyncReference(asyncId, true);
         return result;
     };
 }

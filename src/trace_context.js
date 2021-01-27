@@ -8,7 +8,7 @@ const semver = require('semver');
 // https://github.com/nodejs/node/issues/19859
 const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
 
-const tracers = {};
+let tracers = {};
 const weaks = new WeakMap();
 
 /**
@@ -100,10 +100,21 @@ function init() {
     hook.enable();
 }
 
+/**
+ * clear the current traces in the context
+ * @param {Number} maxTracers  maximum number of allowed tracers
+ */
+function privateClearTracers(maxTracers) {
+    if (Object.keys(tracers).length > maxTracers) {
+        tracers = {};
+    }
+}
+
 module.exports = {
     get,
     init,
     setAsyncReference,
     destroyAsync,
     RunInContext,
+    privateClearTracers,
 };

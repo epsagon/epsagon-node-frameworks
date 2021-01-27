@@ -1,3 +1,4 @@
+require('./resource_monitor');
 const epsagon = require('epsagon');
 const http = require('./http.js');
 

@@ -23,7 +23,7 @@ function tracersTTLCheck() {
      * @returns {Boolean} indication if the tracer should be deleted
      */
     function shouldDelete(tracer) {
-        if (!tracer.createdAt) {
+        if (!(tracer && tracer.createdAt)) {
             return false;
         }
 

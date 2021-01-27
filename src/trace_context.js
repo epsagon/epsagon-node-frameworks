@@ -110,6 +110,20 @@ function privateClearTracers(maxTracers) {
     }
 }
 
+/**
+ * run ttl checks and remove the relevant tracers
+ * @param {Function} shouldDelete    predicate to check if a tracer should be deleted
+ */
+function privateCheckTTLConditions(shouldDelete) {
+    const passedTTL = Object
+        .entries(tracers)
+        .filter(([, tracer]) => shouldDelete(tracer));
+
+    passedTTL.forEach(([id]) => {
+        delete tracers[id];
+    });
+}
+
 module.exports = {
     get,
     init,
@@ -117,4 +131,5 @@ module.exports = {
     destroyAsync,
     RunInContext,
     privateClearTracers,
+    privateCheckTTLConditions,
 };

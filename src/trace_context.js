@@ -2,13 +2,14 @@
  * @fileoverview Tracer context for managing multiple tracers
  */
 
+const uuid = require('uuid4');
 const asyncHooks = require('async_hooks');
 const semver = require('semver');
 
 // https://github.com/nodejs/node/issues/19859
 const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
 
-const tracers = {};
+let tracers = {};
 const weaks = new WeakMap();
 
 /**
@@ -100,10 +101,20 @@ function init() {
     hook.enable();
 }
 
+/**
+ * clear the current traces in the context
+ */
+function __private_clear_tracers(maxTracers) {
+    if (Object.keys(tracers).length > maxTracers) {
+        tracers = {};
+    }
+}
+
 module.exports = {
     get,
     init,
     setAsyncReference,
     destroyAsync,
     RunInContext,
+    __private_clear_tracers,
 };

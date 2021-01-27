@@ -58,9 +58,10 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
  */
 function setAsyncReference(asyncId, withRelationship = false) {
     if (!tracers[asyncId]) return;
-    tracers[asyncHooks.executionAsyncId()] = tracers[asyncId];
-    if (tracers[asyncHooks.executionAsyncId()]) {
-        tracers[asyncHooks.executionAsyncId()].withRelationship = withRelationship;
+    const currentAsyncId = asyncHooks.executionAsyncId();
+    tracers[currentAsyncId] = tracers[asyncId];
+    if (tracers[currentAsyncId] && !tracers[currentAsyncId].withRelationship) {
+        tracers[currentAsyncId].withRelationship = withRelationship;
     }
 }
 

@@ -27,4 +27,4 @@ jobs:
 stages:
   - Test
   - name: build-and-deploy
-    if: branch = master AND type = push
+    if: false

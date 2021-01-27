@@ -2,7 +2,6 @@
  * @fileoverview Tracer context for managing multiple tracers
  */
 
-const uuid = require('uuid4');
 const asyncHooks = require('async_hooks');
 const semver = require('semver');
 
@@ -103,8 +102,9 @@ function init() {
 
 /**
  * clear the current traces in the context
+ * @param {Number} maxTracers  maximum number of allowed tracers
  */
-function __private_clear_tracers(maxTracers) {
+function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
         tracers = {};
     }
@@ -116,5 +116,5 @@ module.exports = {
     setAsyncReference,
     destroyAsync,
     RunInContext,
-    __private_clear_tracers,
+    privateClearTracers,
 };

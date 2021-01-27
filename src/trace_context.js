@@ -2,6 +2,7 @@
  * @fileoverview Tracer context for managing multiple tracers
  */
 
+const { utils } = require('epsagon');
 const asyncHooks = require('async_hooks');
 const semver = require('semver');
 
@@ -119,9 +120,16 @@ function privateCheckTTLConditions(shouldDelete) {
         .entries(tracers)
         .filter(([, tracer]) => shouldDelete(tracer));
 
-    passedTTL.forEach(([id]) => {
-        delete tracers[id];
-    });
+    if (passedTTL.length) {
+        utils.debugLog(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
+        utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`)
+        passedTTL.forEach(([id]) => {
+            delete tracers[id];
+        });
+
+        utils.debugLog(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`)
+    }
+
 }
 
 module.exports = {

@@ -16,7 +16,7 @@ function monitorResources() {
 
         if (usedCPU > MAX_CPU_USAGE || usedMemory > MAX_MEM_USAGE) {
             epsagon.utils.debugLog(
-                `[resource-monitor] cpu/mem exceeded allowed limit, disabling epsagon, cpu: ${usedCPU}, mem: %{usedMemory}`
+                `[resource-monitor] cpu/mem exceeded allowed limit, disabling epsagon, cpu: ${usedCPU}, mem: ${usedMemory}`
             );
 
             // disable epsagon

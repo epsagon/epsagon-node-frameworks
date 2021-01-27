@@ -32,6 +32,7 @@ function tracersTTLCheck() {
         return elapsed > MAX_TRACER_TTL;
     }
 
+    utils.debugLog('[resource-monitor] running TTL checks');
     traceContext.privateCheckTTLConditions(shouldDelete);
 }
 

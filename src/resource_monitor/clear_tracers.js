@@ -1,6 +1,5 @@
 /** @fileoverview clear tracers every hour */
 
-const { utils } = require('epsagon');
 const schedule = require('node-schedule');
 const traceContext = require('../trace_context');
 
@@ -11,7 +10,7 @@ const CLEAR_TRACERS_CRON_EXPR = process.env.EPSAGON_RESOURCE_CLEAR_TRACERS_CRON 
 
 /** clear all tracers */
 function clearTracers() {
-    utils.debugLog('[resource-monitor] removing tracers from memory');
+    console.log('[resource-monitor] removing tracers from memory');
     traceContext.privateClearTracers(MAX_TRACERS);
 }
 
@@ -32,7 +31,7 @@ function tracersTTLCheck() {
         return elapsed > MAX_TRACER_TTL;
     }
 
-    utils.debugLog('[resource-monitor] running TTL checks');
+    console.log('[resource-monitor] running TTL checks');
     traceContext.privateCheckTTLConditions(shouldDelete);
 }
 

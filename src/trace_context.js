@@ -122,16 +122,15 @@ function privateCheckTTLConditions(shouldDelete) {
 
     if (passedTTL.length) {
         utils.debugLog(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
-        utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`)
+        utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach(([id]) => {
             tracers[id] = null;
-            delete tracers[id]
+            delete tracers[id];
         });
 
-        utils.debugLog(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`)
+        utils.debugLog(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`);
     }
-
 }
 
 module.exports = {

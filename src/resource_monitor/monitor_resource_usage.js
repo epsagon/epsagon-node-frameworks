@@ -11,7 +11,6 @@ const RESOURCE_MONITOR_CRON_EXPR = process.env.EPSAGON_RESOURCE_MONITOR_CRON || 
 
 /** check cpu/mem usage */
 function monitorResources() {
-    console.log('[resource-monitor] checking resource usage');
     getCPUUsage().then((usedCPU) => {
         const usedMemory = getMemoryUsage();
 

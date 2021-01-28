@@ -24,7 +24,7 @@ function destroyAsync(asyncId, forceDelete = false) {
                 delete tracers[key];
             }
         });
-        console.log(Object.keys(tracers).length)
+        // console.log(Object.keys(tracers).length)
     } else if (tracers[asyncId] && !tracers[asyncId].withRelationship) {
         delete tracers[asyncId];
     }

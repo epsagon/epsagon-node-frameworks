@@ -24,8 +24,8 @@ function parseQueryArgs(values, cb) {
 }
 
 /**
- * Wraps the redis' send command function with tracing
- * @param {Function} wrappedFunction The wrapped function from redis module
+ * Wraps mysql Query with tracing
+ * @param {Function} wrappedFunction The wrapped function from mysql module
  * @returns {Function} The wrapped function
  */
 function mysqlQueryWrapper(wrappedFunction) {

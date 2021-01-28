@@ -10,23 +10,23 @@ const semver = require('semver');
 const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
 let tracingEnabled = true;
 
-let tracers = {};
+let tracers = new WeakMap();
 const weaks = new WeakMap();
 
 /**
  * Destroys the tracer of an async context
  * @param {Number} asyncId The id of the async thread
- * @param {Boolean} forceDelete Force delete all traces relationships
  */
-function destroyAsync(asyncId, forceDelete = false) {
-    if (forceDelete) {
-        const asyncTrace = tracers[asyncId];
-        Object.entries(tracers).forEach(([key, tracer]) => {
-            if (asyncTrace === tracer) {
-                delete tracers[key];
-            }
+function destroyAsync(asyncId) {
+    if (tracers[asyncId] && tracers[asyncId].mainAsyncIds.has(asyncId)) {
+        const asyncTracer = tracers[asyncId];
+        asyncTracer.relatedAsyncIds.forEach((temporaryAsyncId) => {
+            delete tracers[temporaryAsyncId];
         });
-    } else if (tracers[asyncId] && !tracers[asyncId].withRelationship) {
+        asyncTracer.relatedAsyncIds.clear();
+        asyncTracer.mainAsyncIds.clear();
+    } else if (tracers[asyncId]) {
+        tracers[asyncId].relatedAsyncIds.delete(asyncId);
         delete tracers[asyncId];
     }
 }
@@ -42,8 +42,7 @@ function destroyAsync(asyncId, forceDelete = false) {
 function initAsync(asyncId, type, triggerAsyncId, resource) {
     if (tracers[triggerAsyncId]) {
         tracers[asyncId] = tracers[triggerAsyncId];
-    } else if (tracers[asyncHooks.executionAsyncId()]) {
-        tracers[asyncId] = tracers[asyncHooks.executionAsyncId()];
+        tracers[asyncId].relatedAsyncIds.add(asyncId);
     }
 
     if (hasKeepAliveBug && (type === 'TCPWRAP' || type === 'HTTPPARSER')) {
@@ -56,14 +55,29 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 /**
  * Creates a reference to another asyncId
  * @param {Number} asyncId sets the reference to this asyncId
- * @param {boolean} withRelationship sets with relationship if needed
  */
-function setAsyncReference(asyncId, withRelationship = false) {
+function setAsyncReference(asyncId) {
     if (!tracers[asyncId]) return;
     const currentAsyncId = asyncHooks.executionAsyncId();
     tracers[currentAsyncId] = tracers[asyncId];
-    if (tracers[currentAsyncId] && !tracers[currentAsyncId].withRelationship) {
-        tracers[currentAsyncId].withRelationship = withRelationship;
+    tracers[currentAsyncId].relatedAsyncIds.add(currentAsyncId);
+}
+
+
+/**
+ * Sets the current execution Async Id as main.
+ * This means that when this Async Id object is deleted
+ * all references to the tracer will be removed
+ * @param {Boolean} add Should the current async id be added as main,
+ *    if false then if will be removed
+ */
+function setMainReference(add = true) {
+    const currentAsyncId = asyncHooks.executionAsyncId();
+    if (!tracers[currentAsyncId]) return;
+    if (add) {
+        tracers[currentAsyncId].mainAsyncIds.add(currentAsyncId);
+    } else {
+        tracers[currentAsyncId].mainAsyncIds.delete(currentAsyncId);
     }
 }
 
@@ -76,6 +90,8 @@ function setAsyncReference(asyncId, withRelationship = false) {
  */
 function RunInContext(createTracer, handle) {
     const tracer = createTracer();
+    tracer.relatedAsyncIds = new Set();
+    tracer.mainAsyncIds = new Set();
     if (tracer != null) {
         tracers[asyncHooks.executionAsyncId()] = tracer;
     }
@@ -108,7 +124,7 @@ function init() {
  */
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
-        tracers = {};
+        tracers = new WeakMap();
     }
 }
 
@@ -117,17 +133,18 @@ function privateClearTracers(maxTracers) {
  * @param {Function} shouldDelete    predicate to check if a tracer should be deleted
  */
 function privateCheckTTLConditions(shouldDelete) {
-    const passedTTL = Object
-        .entries(tracers)
-        .filter(([, tracer]) => shouldDelete(tracer));
+    const passedTTL = [...new Set(Object
+        .values(tracers))]
+        .filter(tracer => shouldDelete(tracer));
 
     if (passedTTL.length) {
         utils.debugLog(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
         utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
-        passedTTL.forEach(([id]) => {
-            tracers[id] = null;
-            delete tracers[id];
+        passedTTL.forEach((tracer) => {
+            tracer.relatedAsyncIds.forEach((id) => {
+                delete tracers[id];
+            });
         });
 
         utils.debugLog(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`);
@@ -157,4 +174,5 @@ module.exports = {
     privateCheckTTLConditions,
     disableTracing,
     isTracingEnabled,
+    setMainReference,
 };

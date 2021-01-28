@@ -8,6 +8,7 @@ const semver = require('semver');
 
 // https://github.com/nodejs/node/issues/19859
 const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
+let tracingEnabled = true;
 
 let tracers = {};
 const weaks = new WeakMap();
@@ -133,6 +134,19 @@ function privateCheckTTLConditions(shouldDelete) {
     }
 }
 
+/**
+ * disable tracing globaly
+ * sets a flag, each middleware wrapper should check when running
+ */
+function disableTracing() {
+    tracingEnabled = false;
+}
+
+/** @returns {Boolean}  tracing enabled flag */
+function isTracingEnabled() {
+    return tracingEnabled;
+}
+
 module.exports = {
     get,
     init,
@@ -141,4 +155,6 @@ module.exports = {
     RunInContext,
     privateClearTracers,
     privateCheckTTLConditions,
+    disableTracing,
+    isTracingEnabled,
 };

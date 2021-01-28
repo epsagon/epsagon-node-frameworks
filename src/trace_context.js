@@ -9,7 +9,7 @@ const semver = require('semver');
 const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
 let tracingEnabled = true;
 
-let tracers = new WeakMap();
+let tracers = {};
 const weaks = new WeakMap();
 
 /**
@@ -123,7 +123,8 @@ function init() {
  */
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
-        tracers = new WeakMap();
+        console.log(`[resource-monitor] found ${tracers.length}, deleting`);
+        tracers = {};
     }
 }
 

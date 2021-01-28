@@ -10,7 +10,6 @@ const CLEAR_TRACERS_CRON_EXPR = process.env.EPSAGON_RESOURCE_CLEAR_TRACERS_CRON 
 
 /** clear all tracers */
 function clearTracers() {
-    console.log('[resource-monitor] removing tracers from memory');
     traceContext.privateClearTracers(MAX_TRACERS);
 }
 
@@ -31,7 +30,6 @@ function tracersTTLCheck() {
         return elapsed > MAX_TRACER_TTL;
     }
 
-    console.log('[resource-monitor] running TTL checks');
     traceContext.privateCheckTTLConditions(shouldDelete);
 }
 

@@ -2,7 +2,6 @@
  * @fileoverview Tracer context for managing multiple tracers
  */
 
-const { utils } = require('epsagon');
 const asyncHooks = require('async_hooks');
 const semver = require('semver');
 
@@ -10,7 +9,7 @@ const semver = require('semver');
 const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
 let tracingEnabled = true;
 
-let tracers = new WeakMap();
+let tracers = {};
 const weaks = new WeakMap();
 
 /**
@@ -124,7 +123,8 @@ function init() {
  */
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
-        tracers = new WeakMap();
+        console.log(`[resource-monitor] found ${tracers.length}, deleting`);
+        tracers = {};
     }
 }
 
@@ -138,8 +138,8 @@ function privateCheckTTLConditions(shouldDelete) {
         .filter(tracer => shouldDelete(tracer));
 
     if (passedTTL.length) {
-        utils.debugLog(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
-        utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
+        console.log(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
+        console.log(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach((tracer) => {
             tracer.relatedAsyncIds.forEach((id) => {
@@ -147,7 +147,7 @@ function privateCheckTTLConditions(shouldDelete) {
             });
         });
 
-        utils.debugLog(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`);
+        console.log(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`);
     }
 }
 

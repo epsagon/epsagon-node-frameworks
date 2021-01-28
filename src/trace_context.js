@@ -21,14 +21,12 @@ function destroyAsync(asyncId) {
     if (tracers[asyncId] && tracers[asyncId].mainAsyncIds.has(asyncId)) {
         const asyncTracer = tracers[asyncId];
         if (asyncTracer) {
-            console.log(`destroyAsync(${asyncId}, forceDelete=true):: relatedAsyncIds size: ${asyncTracer.relatedAsyncIds.size} tracers length: ${Object.keys(tracers).length}`);
             asyncTracer.relatedAsyncIds.forEach((temporaryAsyncId) => {
                 delete tracers[temporaryAsyncId];
             });
             asyncTracer.relatedAsyncIds.clear();
             asyncTracer.mainAsyncIds.clear();
         }
-        console.log(`destroyAsync(${asyncId}, forceDelete=true):: tracers length: ${Object.keys(tracers).length}`);
     } else if (tracers[asyncId]) {
         tracers[asyncId].relatedAsyncIds.delete(asyncId);
         delete tracers[asyncId];
@@ -131,7 +129,7 @@ function init() {
  */
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
-        tracers = {};
+        tracers = new WeakMap();
     }
 }
 
@@ -140,17 +138,18 @@ function privateClearTracers(maxTracers) {
  * @param {Function} shouldDelete    predicate to check if a tracer should be deleted
  */
 function privateCheckTTLConditions(shouldDelete) {
-    const passedTTL = Object
-        .entries(tracers)
-        .filter(([, tracer]) => shouldDelete(tracer));
+    const passedTTL = [...new Set(Object
+        .values(tracers))]
+        .filter(tracer => shouldDelete(tracer));
 
     if (passedTTL.length) {
         utils.debugLog(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
         utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
-        passedTTL.forEach(([id]) => {
-            tracers[id] = null;
-            delete tracers[id];
+        passedTTL.forEach((tracer) => {
+            tracer.relatedAsyncIds.forEach((id) => {
+                delete tracers[id];
+            });
         });
 
         utils.debugLog(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`);

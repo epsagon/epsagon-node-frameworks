@@ -20,13 +20,11 @@ const weaks = new WeakMap();
 function destroyAsync(asyncId) {
     if (tracers[asyncId] && tracers[asyncId].mainAsyncIds.has(asyncId)) {
         const asyncTracer = tracers[asyncId];
-        if (asyncTracer) {
-            asyncTracer.relatedAsyncIds.forEach((temporaryAsyncId) => {
-                delete tracers[temporaryAsyncId];
-            });
-            asyncTracer.relatedAsyncIds.clear();
-            asyncTracer.mainAsyncIds.clear();
-        }
+        asyncTracer.relatedAsyncIds.forEach((temporaryAsyncId) => {
+            delete tracers[temporaryAsyncId];
+        });
+        asyncTracer.relatedAsyncIds.clear();
+        asyncTracer.mainAsyncIds.clear();
     } else if (tracers[asyncId]) {
         tracers[asyncId].relatedAsyncIds.delete(asyncId);
         delete tracers[asyncId];
@@ -44,9 +42,6 @@ function destroyAsync(asyncId) {
 function initAsync(asyncId, type, triggerAsyncId, resource) {
     if (tracers[triggerAsyncId]) {
         tracers[asyncId] = tracers[triggerAsyncId];
-        tracers[asyncId].relatedAsyncIds.add(asyncId);
-    } else if (tracers[asyncHooks.executionAsyncId()]) {
-        tracers[asyncId] = tracers[asyncHooks.executionAsyncId()];
         tracers[asyncId].relatedAsyncIds.add(asyncId);
     }
 

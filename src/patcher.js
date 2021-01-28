@@ -18,6 +18,7 @@ const superagentPatcher = require('./events/superagent.js');
 const superagentWrapperPatcher = require('./events/superagent-wrapper.js');
 const redisPatcher = require('./events/redis.js');
 const mysqlPatcher = require('./events/mysql.js');
+const httpPatcher = require('./events/http.js');
 const wsPatcher = require('./wrappers/ws.js');
 const restifyPatcher = require('./wrappers/restify.js');
 
@@ -56,5 +57,6 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
         wsPatcher,
         restifyPatcher,
         mysqlPatcher,
+        httpPatcher,
     ].forEach(patch);
 }

@@ -84,9 +84,7 @@ function findCalledParameteredPath(req) {
  * @param {Int} startTime Runner start time
  */
 function finishRunner(expressEvent, res, req, startTime) {
-    const metadataMap = eventInterface.getMetadataMap(expressEvent);
-
-    eventInterface.addToMetadataMap(metadataMap, {
+    eventInterface.addToMetadata(expressEvent, {
         url: `${req.protocol}://${req.hostname}${req.originalUrl}`,
         status_code: res.statusCode,
     }, {
@@ -95,28 +93,28 @@ function finishRunner(expressEvent, res, req, startTime) {
     });
 
     if (req.query && Object.keys(req.query).length) {
-        eventInterface.addToMetadataMap(metadataMap, { query: req.query });
+        eventInterface.addToMetadata(expressEvent, { query: req.query });
     }
 
     if (req.params && Object.keys(req.params).length) {
-        eventInterface.addToMetadataMap(metadataMap, {}, { params: req.params });
+        eventInterface.addToMetadata(expressEvent, {}, { params: req.params });
     }
 
     if (req.body && Object.keys(req.body).length) {
-        eventInterface.addToMetadataMap(metadataMap, {}, { request_data: req.body });
+        eventInterface.addToMetadata(expressEvent, {}, { request_data: req.body });
     }
 
     if (req.route) {
         const routePath = (req.route.path instanceof Array) ?
             findCalledParameteredPath(req) : req.route.path;
         if (routePath) {
-            eventInterface.addToMetadataMap(metadataMap,
+            eventInterface.addToMetadata(expressEvent,
                 { route_path: req.baseUrl + routePath });
         }
     }
 
     if (extractEpsagonHeader(req.headers)) {
-        eventInterface.addToMetadataMap(metadataMap, {
+        eventInterface.addToMetadata(expressEvent, {
             http_trace_id: extractEpsagonHeader(req.headers),
         });
     }

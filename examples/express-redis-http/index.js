@@ -19,7 +19,9 @@ epsagon.init({
 app.get('/', (req, res) => {
     client.get('test', (err, result)  => {
         if (err) throw err;
-        request('https://httpbin.org/get', (error, response, body) => {
+        request('https://httpbin.org/post',
+          { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ test: 1 }) },
+          (error, response, body) => {
             console.log('statusCode:', response && response.statusCode);
             res.send('Express return from request pool')
         })

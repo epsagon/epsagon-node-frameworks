@@ -199,10 +199,10 @@ function expressWrapper(wrappedFunction) {
         const result = wrappedFunction.apply(this, arguments);
         utils.debugLog('[express] - called the original function');
         this.use(
-            (req, res, next) => traceContext.RunInContext(
+            (req, res, next) => (traceContext.isTracingEnabled() ? traceContext.RunInContext(
                 tracer.createTracer,
                 () => expressMiddleware(req, res, next)
-            )
+            ) : next())
         );
         return result;
     };
@@ -217,6 +217,8 @@ function expressListenWrapper(wrappedFunction) {
     return function internalExpressListenWrapper() {
         const result = wrappedFunction.apply(this, arguments);
         this.use((err, req, _res, next) => {
+            if (!traceContext.isTracingEnabled()) return next();
+
             // Setting the express err as an Epsagon err
             if (err) {
                 req.epsagon.setError({
@@ -224,9 +226,9 @@ function expressListenWrapper(wrappedFunction) {
                     message: err.message,
                     stack: err.stack,
                 });
-                next(err);
+                return next(err);
             } else {
-                next();
+                return next();
             }
         });
         return result;

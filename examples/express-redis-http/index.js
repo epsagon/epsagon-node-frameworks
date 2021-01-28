@@ -1,6 +1,7 @@
 const express = require('express');
-const epsagon = require('epsagon-frameworks');
+const epsagon = require('../../src/index');
 const redis = require('redis');
+const request = require('request');
 const app = express();
 
 const host = process.env.REDIS_HOST || 'localhost';
@@ -18,8 +19,10 @@ epsagon.init({
 app.get('/', (req, res) => {
     client.get('test', (err, result)  => {
         if (err) throw err;
-        console.log("Express call log")
-        res.send('Express return from redis client')
+        request('https://httpbin.org/get', (error, response, body) => {
+            console.log('statusCode:', response && response.statusCode);
+            res.send('Express return from request pool')
+        })
     })
 })
 

@@ -227,9 +227,8 @@ function expressListenWrapper(wrappedFunction) {
                     stack: err.stack,
                 });
                 return next(err);
-            } else {
-                return next();
             }
+            return next();
         });
         return result;
     };

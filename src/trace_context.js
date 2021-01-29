@@ -129,6 +129,13 @@ function privateClearTracers(maxTracers) {
 }
 
 /**
+ * documentation
+ */
+function superClear() {
+    tracers = {};
+}
+
+/**
  * run ttl checks and remove the relevant tracers
  * @param {Function} shouldDelete    predicate to check if a tracer should be deleted
  */
@@ -175,4 +182,5 @@ module.exports = {
     disableTracing,
     isTracingEnabled,
     setMainReference,
+    superClear,
 };

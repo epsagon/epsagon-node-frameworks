@@ -65,6 +65,7 @@ function expressMiddleware(req, res, next) {
                 utils.debugLog('[express] - sending trace');
                 tracer.sendTrace(() => {}, tracerObj).then(resolve).then(() => {
                     utils.debugLog('[express] - trace sent + request resolved');
+                    traceContext.superClear();
                 });
             });
         });

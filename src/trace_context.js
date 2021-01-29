@@ -132,7 +132,7 @@ function privateClearTracers(maxTracers) {
  * documentation
  */
 function superClear() {
-    tracers = {};
+    Object.keys(tracers).forEach((key) => { delete tracers[key]; });
 }
 
 /**

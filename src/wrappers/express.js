@@ -3,17 +3,14 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
-const asyncHooks = require('async_hooks');
 const {
     tracer,
     utils,
     moduleUtils,
-    eventInterface,
+    config,
 } = require('epsagon');
-const traceContext = require('../trace_context.js');
 const expressRunner = require('../runners/express.js');
 const { shouldIgnore } = require('../http.js');
-const { methods } = require('../consts');
 
 /**
  * Express requests middleware that runs in context
@@ -23,20 +20,16 @@ const { methods } = require('../consts');
  */
 function expressMiddleware(req, res, next) {
     // Check if endpoint is ignored
-    traceContext.setMainReference();
     utils.debugLog('[express] - starting express middleware');
-    const tracerObj = tracer.getTrace();
-    if (!tracerObj) {
-        utils.debugLog('[express] - no tracer found on init');
-    }
-    const originalAsyncId = asyncHooks.executionAsyncId();
+    const tracerObj = tracer.createTracer();
     if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
         next();
         return;
     }
 
-    tracer.restart();
+    tracerObj.trace.setAppName(config.getConfig().appName);
+    tracerObj.trace.setToken(config.getConfig().token);
     let expressEvent;
     const startTime = Date.now();
     try {
@@ -44,10 +37,8 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('[express] - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
-            traceContext.setAsyncReference(originalAsyncId);
             utils.debugLog('[express] - creating response promise');
             res.once('finish', function handleResponse() {
-                traceContext.setMainReference();
                 utils.debugLog('[express] - got finish event, handling response');
                 if (
                     ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
@@ -68,7 +59,8 @@ function expressMiddleware(req, res, next) {
                 });
             });
         });
-        tracer.addRunner(expressEvent, requestPromise);
+        tracerObj.trace.addEvent(expressEvent, requestPromise);
+        tracerObj.currRunner = expressEvent;
         utils.debugLog('[express] - added runner');
 
         // Inject trace functions
@@ -84,102 +76,7 @@ function expressMiddleware(req, res, next) {
     } finally {
         utils.debugLog('[express] - general finally');
         next();
-        traceContext.setMainReference(false);
     }
-}
-
-/**
- * Wraps express next function that calls next middleware
- * @param {*} next express next middleware
- * @returns {*} wrapeed function
- */
-function nextWrapper(next) {
-    const asyncId = asyncHooks.executionAsyncId();
-    const originalNext = next;
-    return function internalNextWrapper(error) {
-        utils.debugLog('[express] - middleware executed');
-
-        if (error) {
-            utils.debugLog(error);
-        }
-
-        traceContext.setAsyncReference(asyncId);
-        const result = originalNext(...arguments);
-        return result;
-    };
-}
-/**
- * Wraps next with next wrapper.
- * @param {*} args - list of arguments
- * @return {*} - list of arguments with wrapped next function
- */
-function getWrappedNext(args) {
-    const copyArgs = [...args];
-    const next = copyArgs[copyArgs.length - 1];
-    if (next && next.name === 'next') {
-        copyArgs[copyArgs.length - 1] = nextWrapper(args[args.length - 1]);
-    }
-
-    return copyArgs;
-}
-
-
-/**
- * Wraps clients middleware
- * @param {*} middleware - middleware to wrap
- * @returns {function} wrapped middleware
- */
-function middlewareWrapper(middleware) {
-    /* eslint-disable no-unused-vars */
-    // length checks function argument quantity
-    if (middleware.length === 4) {
-        return function internalMiddlewareWrapper(error, req, res, next) {
-            // Capture the error into the trace
-            const tracerObj = tracer.getTrace();
-            if (tracerObj && tracerObj.currRunner) {
-                eventInterface.setException(tracerObj.currRunner, error);
-            }
-
-            return middleware.apply(this, getWrappedNext(arguments));
-        };
-    }
-    return function internalMiddlewareWrapper(req, res, next) {
-        return middleware.apply(this, getWrappedNext(arguments));
-    };
-    /* eslint-enable no-unused-vars */
-}
-
-/**
- * Wraps express http methods function
- * @param {*} original - original http method function
- * @returns {function} - wrapped http method function
- */
-function methodWrapper(original) {
-    return function internalMethodWrapper() {
-        // Check if we have middlewares
-        for (let i = 0; i < arguments.length - 1; i += 1) {
-            if (arguments[i] && typeof arguments[i] === 'function') {
-                arguments[i] = middlewareWrapper(arguments[i]);
-            }
-        }
-
-        return original.apply(this, arguments);
-    };
-}
-
-/**
- * Wraps express use function
- * @param {*} original - original use function
- * @returns {function} - wrapped use function
- */
-function useWrapper(original) {
-    return function internalUseWrapper() {
-        // Check if we have middleware
-        if (arguments.length > 1 && arguments[1] && typeof arguments[1] === 'function') {
-            arguments[1] = middlewareWrapper(arguments[1]);
-        }
-        return original.apply(this, arguments);
-    };
 }
 
 
@@ -190,18 +87,11 @@ function useWrapper(original) {
  */
 function expressWrapper(wrappedFunction) {
     utils.debugLog('[express] - wrapping express');
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalExpressWrapper() {
         utils.debugLog('[express] - express app created');
         const result = wrappedFunction.apply(this, arguments);
         utils.debugLog('[express] - called the original function');
-        this.use(
-            (req, res, next) => (traceContext.isTracingEnabled() ? traceContext.RunInContext(
-                tracer.createTracer,
-                () => expressMiddleware(req, res, next)
-            ) : next())
-        );
+        this.use(expressMiddleware);
         return result;
     };
 }
@@ -215,10 +105,8 @@ function expressListenWrapper(wrappedFunction) {
     return function internalExpressListenWrapper() {
         const result = wrappedFunction.apply(this, arguments);
         this.use((err, req, _res, next) => {
-            if (!traceContext.isTracingEnabled()) return next();
-
             // Setting the express err as an Epsagon err
-            if (err) {
+            if (err && req.epsagon) {
                 req.epsagon.setError({
                     name: 'Error',
                     message: err.message,
@@ -249,20 +137,5 @@ module.exports = {
             expressListenWrapper,
             express => express.application
         );
-        moduleUtils.patchModule(
-            'express',
-            'use',
-            useWrapper,
-            express => express.Router
-        );
-        // Loop over http methods and patch them all with method wrapper
-        for (let i = 0; i < methods.length; i += 1) {
-            moduleUtils.patchModule(
-                'express',
-                methods[i],
-                methodWrapper,
-                express => express.Route.prototype
-            );
-        }
     },
 };

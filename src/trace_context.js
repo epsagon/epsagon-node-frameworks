@@ -24,9 +24,6 @@ function destroyAsync(asyncId) {
         });
         asyncTracer.relatedAsyncIds.clear();
         asyncTracer.mainAsyncIds.clear();
-    } else if (tracers[asyncId]) {
-        tracers[asyncId].relatedAsyncIds.delete(asyncId);
-        delete tracers[asyncId];
     }
 }
 

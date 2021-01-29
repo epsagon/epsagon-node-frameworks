@@ -22,6 +22,27 @@ const wsPatcher = require('./wrappers/ws.js');
 const restifyPatcher = require('./wrappers/restify.js');
 
 
+const LIBNAME_TO_PATCHER = {
+    express: expressPatcher,
+    hapi: hapiPatcher,
+    koa: koaPatcher,
+    pubsub: pubusbPatcher,
+    nats: natsPatcher,
+    kafkajs: kafkajsPatcher,
+    kafkanode: kafkaNodePatcher,
+    sqsconsumer: sqsConsumerPatcher,
+    amqplib: amqplibPatcher,
+    amqp: amqpPatcher,
+    bunnybus: bunnybusPatcher,
+    superagent: superagentPatcher,
+    superagentWrapper: superagentWrapperPatcher,
+    redis: redisPatcher,
+    ws: wsPatcher,
+    restify: restifyPatcher,
+    mysql: mysqlPatcher,
+};
+
+
 /**
  * Patches a module
  * @param {Object} patcher module
@@ -38,23 +59,36 @@ function patch(patcher) {
 
 
 if (!config.getConfig().isEpsagonPatchDisabled) {
-    [
-        expressPatcher,
-        hapiPatcher,
-        koaPatcher,
-        pubusbPatcher,
-        natsPatcher,
-        kafkajsPatcher,
-        kafkaNodePatcher,
-        sqsConsumerPatcher,
-        amqplibPatcher,
-        amqpPatcher,
-        bunnybusPatcher,
-        superagentPatcher,
-        superagentWrapperPatcher,
-        redisPatcher,
-        wsPatcher,
-        restifyPatcher,
-        mysqlPatcher,
-    ].forEach(patch);
+    if (!config.getConfig().patchWhitelist) {
+        [
+            expressPatcher,
+            hapiPatcher,
+            koaPatcher,
+            pubusbPatcher,
+            natsPatcher,
+            kafkajsPatcher,
+            kafkaNodePatcher,
+            sqsConsumerPatcher,
+            amqplibPatcher,
+            amqpPatcher,
+            bunnybusPatcher,
+            superagentPatcher,
+            superagentWrapperPatcher,
+            redisPatcher,
+            wsPatcher,
+            restifyPatcher,
+            mysqlPatcher,
+        ].forEach(patch);
+    } else {
+        config.getConfig().patchWhitelist.forEach(
+            (lib) => {
+                if (!(LIBNAME_TO_PATCHER[lib])) {
+                    utils.debugLog(`[FRM-PATCHER] Unable to find lib to patch: ${lib}`);
+                } else {
+                    utils.debugLog(`[FRM-PATCHER] Whitelisting ${lib}`);
+                    patch(LIBNAME_TO_PATCHER[lib]);
+                }
+            }
+        );
+    }
 }

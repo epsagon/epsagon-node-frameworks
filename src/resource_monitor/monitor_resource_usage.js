@@ -13,6 +13,7 @@ const RESOURCE_MONITOR_CRON_EXPR = process.env.EPSAGON_RESOURCE_MONITOR_CRON || 
 function monitorResources() {
     osUtils.cpuUsage((usedCPU) => {
         const usedMemory = 1 - osUtils.freememPercentage();
+        console.log(`[resource-monitor] cpu: ${usedCPU}, mem: ${usedMemory}`);
 
         if (usedCPU > MAX_CPU_USAGE || usedMemory > MAX_MEM_USAGE) {
             console.log(

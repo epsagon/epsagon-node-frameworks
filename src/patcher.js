@@ -40,7 +40,6 @@ const LIBNAME_TO_PATCHER = {
     ws: wsPatcher,
     restify: restifyPatcher,
     mysql: mysqlPatcher,
-    fs,
 };
 
 

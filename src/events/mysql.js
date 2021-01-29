@@ -76,8 +76,8 @@ function mysqlQueryWrapper(wrappedFunction) {
 }
 
 /**
- * Wraps the redis' send command function with tracing
- * @param {Function} wrappedFunction The wrapped function from redis module
+ * Wraps the mysql getConnection function with tracing
+ * @param {Function} wrappedFunction The wrapped function from mysql/mysql2 module
  * @returns {Function} The wrapped function
  */
 function mysqlGetConnectionWrapper(wrappedFunction) {

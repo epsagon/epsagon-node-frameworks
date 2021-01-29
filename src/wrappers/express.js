@@ -46,10 +46,10 @@ function expressMiddleware(req, res, next) {
         const requestPromise = new Promise((resolve) => {
             traceContext.setAsyncReference(originalAsyncId);
             utils.debugLog('[express] - creating response promise');
-            res.once('finish', function handleResponse() {
+            res.once('close', function handleResponse() {
                 traceContext.setAsyncReference(originalAsyncId);
                 traceContext.setMainReference();
-                utils.debugLog('[express] - got finish event, handling response');
+                utils.debugLog('[express] - got close event, handling response');
                 if (
                     ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
                     (!req.route)

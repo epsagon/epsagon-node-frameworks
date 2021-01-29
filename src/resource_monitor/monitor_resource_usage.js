@@ -20,8 +20,10 @@ function monitorResources() {
             );
 
             // disable epsagon
-            epsagon.unpatch();
-            traceContext.disableTracing();
+            if (traceContext.isTracingEnabled()) {
+                epsagon.unpatch();
+                traceContext.disableTracing();
+            }
         }
     });
 }

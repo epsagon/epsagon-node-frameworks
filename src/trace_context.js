@@ -123,7 +123,7 @@ function init() {
  */
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
-        console.log(`[resource-monitor] found ${tracers.length}, deleting`);
+        console.log(`[resource-monitor] found ${Object.keys(tracers).length}, deleting`);
         tracers = {};
     }
 }

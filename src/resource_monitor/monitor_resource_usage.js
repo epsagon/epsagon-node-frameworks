@@ -2,8 +2,8 @@
 
 const schedule = require('node-schedule');
 const epsagon = require('epsagon');
+const osUtils = require('os-utils');
 const traceContext = require('../trace_context');
-const { getCPUUsage, getMemoryUsage } = require('./utils');
 
 const MAX_CPU_USAGE = parseInt(process.env.EPSAGON_RESOURCE_MAX_CPU || '90', 10) / 100;
 const MAX_MEM_USAGE = parseInt(process.env.EPSAGON_RESOURCE_MAX_MEM || '90', 10) / 100;
@@ -11,8 +11,8 @@ const RESOURCE_MONITOR_CRON_EXPR = process.env.EPSAGON_RESOURCE_MONITOR_CRON || 
 
 /** check cpu/mem usage */
 function monitorResources() {
-    getCPUUsage().then((usedCPU) => {
-        const usedMemory = getMemoryUsage();
+    osUtils.cpuUsage((usedCPU) => {
+        const usedMemory = 1 - osUtils.freememPercentage();
 
         if (usedCPU > MAX_CPU_USAGE || usedMemory > MAX_MEM_USAGE) {
             console.log(

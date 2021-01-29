@@ -47,6 +47,7 @@ function expressMiddleware(req, res, next) {
             traceContext.setAsyncReference(originalAsyncId);
             utils.debugLog('[express] - creating response promise');
             res.once('finish', function handleResponse() {
+                traceContext.setAsyncReference(originalAsyncId);
                 traceContext.setMainReference();
                 utils.debugLog('[express] - got finish event, handling response');
                 if (
@@ -78,13 +79,13 @@ function expressMiddleware(req, res, next) {
             setError,
             getTraceUrl,
         };
+        traceContext.setMainReference(false);
     } catch (err) {
         utils.debugLog('[express] - general catch');
         utils.debugLog(err);
     } finally {
         utils.debugLog('[express] - general finally');
         next();
-        traceContext.setMainReference(false);
     }
 }
 

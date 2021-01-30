@@ -2,11 +2,12 @@
  * @fileoverview Wraps mysql calls to support async context propagation
  */
 
+const asyncHooks = require('async_hooks');
 const {
     tracer,
     moduleUtils,
 } = require('epsagon');
-const { getAsyncUUID, setAsyncReference } = require('../trace_context');
+const { setAsyncReference } = require('../trace_context');
 
 /**
  * Parse query arguments - get the callback and params
@@ -34,7 +35,7 @@ function mysqlQueryWrapper(wrappedFunction) {
             let params;
             let overrideInnerCallback = false;
 
-            const originalAsyncUuid = getAsyncUUID();
+            const originalAsyncId = asyncHooks.executionAsyncId();
 
             if (sql.onResult) {
                 params = sql.values;
@@ -50,7 +51,7 @@ function mysqlQueryWrapper(wrappedFunction) {
             }
 
             const patchedCallback = (error, results, fields) => {
-                setAsyncReference(originalAsyncUuid);
+                setAsyncReference(originalAsyncId);
 
                 if (callback) {
                     callback(error, results, fields);
@@ -83,10 +84,10 @@ function mysqlGetConnectionWrapper(wrappedFunction) {
     return function internalMysqlGetConnectionWrapper(callback) {
         let patchedCallback = callback;
         try {
-            const originalAsyncUuid = getAsyncUUID();
+            const originalAsyncId = asyncHooks.executionAsyncId();
 
             patchedCallback = (error, rconnection) => {
-                setAsyncReference(originalAsyncUuid);
+                setAsyncReference(originalAsyncId);
 
                 if (callback) {
                     callback(error, rconnection);

@@ -17,18 +17,18 @@ const asyncIDToUUID = {};
 
 /**
  * Destroy the tracer associated with asyncUuid if it exists
- * and asyncUuid is one of its mainAsyncIds.
+ * and asyncUuid is one of its mainAsyncUuids.
  * @param {string} asyncUuid the async UUID to destroy.
  */
 function maybeDestroyTracer(asyncUuid) {
     const tracer = tracers[asyncUuid];
-    if (!tracer || !tracer.mainAsyncIds.has(asyncUuid)) return;
+    if (!tracer || !tracer.mainAsyncUuids.has(asyncUuid)) return;
 
-    tracer.relatedAsyncIds.forEach((relatedAsyncUuid) => {
+    tracer.relatedAsyncUuids.forEach((relatedAsyncUuid) => {
         delete tracers[relatedAsyncUuid];
     });
-    tracer.relatedAsyncIds.clear();
-    tracer.mainAsyncIds.clear();
+    tracer.relatedAsyncUuids.clear();
+    tracer.mainAsyncUuids.clear();
 }
 
 
@@ -62,7 +62,7 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
     const triggerAsyncUuid = asyncIDToUUID[triggerAsyncId];
     if (triggerAsyncUuid && tracers[triggerAsyncUuid]) {
         tracers[asyncUuid] = tracers[triggerAsyncUuid];
-        tracers[asyncUuid].relatedAsyncIds.add(asyncUuid);
+        tracers[asyncUuid].relatedAsyncUuids.add(asyncUuid);
     }
 
     if (hasKeepAliveBug && (type === 'TCPWRAP' || type === 'HTTPPARSER')) {
@@ -106,7 +106,7 @@ function setAsyncReference(asyncUuid) {
     }
 
     tracers[currentAsyncUuid] = tracer;
-    tracer.relatedAsyncIds.add(currentAsyncUuid);
+    tracer.relatedAsyncUuids.add(currentAsyncUuid);
 }
 
 
@@ -129,9 +129,9 @@ function setMainReference(add = true) {
     }
 
     if (add) {
-        tracer.mainAsyncIds.add(currentAsyncUuid);
+        tracer.mainAsyncUuids.add(currentAsyncUuid);
     } else {
-        tracer.mainAsyncIds.delete(currentAsyncUuid);
+        tracer.mainAsyncUuids.delete(currentAsyncUuid);
     }
 }
 
@@ -144,8 +144,8 @@ function setMainReference(add = true) {
  */
 function RunInContext(createTracer, handle) {
     const tracer = createTracer();
-    tracer.relatedAsyncIds = new Set();
-    tracer.mainAsyncIds = new Set();
+    tracer.relatedAsyncUuids = new Set();
+    tracer.mainAsyncUuids = new Set();
 
     const currentAsyncUuid = getAsyncUUID();
     if (currentAsyncUuid) {
@@ -204,7 +204,7 @@ function privateCheckTTLConditions(shouldDelete) {
         console.log(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach((tracer) => {
-            tracer.relatedAsyncIds.forEach((id) => {
+            tracer.relatedAsyncUuids.forEach((id) => {
                 delete tracers[id];
             });
         });

@@ -123,7 +123,7 @@ function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
         console.log(`[resource-monitor] found ${Object.keys(tracers).length}, deleting`);
 
-        Object.values(tracer).forEach(tracer => {
+        Object.values(tracers).forEach((tracer) => {
             eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_hourly: true });
         });
 

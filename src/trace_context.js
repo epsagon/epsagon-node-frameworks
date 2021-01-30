@@ -3,6 +3,7 @@
  */
 
 const asyncHooks = require('async_hooks');
+const { eventInterface } = require('epsagon');
 const semver = require('semver');
 const uuid4 = require('uuid4');
 
@@ -186,6 +187,11 @@ function init() {
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
         console.log(`[resource-monitor] found ${Object.keys(tracers).length}, deleting`);
+
+        Object.values(tracers).forEach((tracer) => {
+            eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_hourly: true });
+        });
+
         tracers = {};
     }
 }
@@ -204,6 +210,7 @@ function privateCheckTTLConditions(shouldDelete) {
         console.log(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach((tracer) => {
+            eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_ttl: true });
             tracer.relatedAsyncUuids.forEach((id) => {
                 delete tracers[id];
             });

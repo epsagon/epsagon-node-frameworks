@@ -4,7 +4,6 @@
 
 const asyncHooks = require('async_hooks');
 const semver = require('semver');
-const uuid4 = require('uuid4');
 
 // https://github.com/nodejs/node/issues/19859
 const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
@@ -12,40 +11,21 @@ let tracingEnabled = true;
 
 let tracers = {};
 const weaks = new WeakMap();
-const asyncIDToUUID = {};
-
-
-/**
- * Destroy the tracer associated with asyncUuid if it exists
- * and asyncUuid is one of its mainAsyncUuids.
- * @param {string} asyncUuid the async UUID to destroy.
- */
-function maybeDestroyTracer(asyncUuid) {
-    const tracer = tracers[asyncUuid];
-    if (!tracer || !tracer.mainAsyncUuids.has(asyncUuid)) return;
-
-    tracer.relatedAsyncUuids.forEach((relatedAsyncUuid) => {
-        delete tracers[relatedAsyncUuid];
-    });
-    tracer.relatedAsyncUuids.clear();
-    tracer.mainAsyncUuids.clear();
-}
-
 
 /**
  * Destroys the tracer of an async context
  * @param {Number} asyncId The id of the async thread
  */
 function destroyAsync(asyncId) {
-    const asyncUuid = asyncIDToUUID[asyncId];
-    if (!asyncUuid) {
-        return;
+    if (tracers[asyncId] && tracers[asyncId].mainAsyncIds.has(asyncId)) {
+        const asyncTracer = tracers[asyncId];
+        asyncTracer.relatedAsyncIds.forEach((temporaryAsyncId) => {
+            delete tracers[temporaryAsyncId];
+        });
+        asyncTracer.relatedAsyncIds.clear();
+        asyncTracer.mainAsyncIds.clear();
     }
-    delete asyncIDToUUID[asyncId];
-
-    maybeDestroyTracer(asyncUuid);
 }
-
 
 /**
  * Initializes the tracer of an async context. Uses the parent tracer, if exists
@@ -56,13 +36,9 @@ function destroyAsync(asyncId) {
  * @param {String} resource The resource
  */
 function initAsync(asyncId, type, triggerAsyncId, resource) {
-    const asyncUuid = uuid4();
-    asyncIDToUUID[asyncId] = asyncUuid;
-
-    const triggerAsyncUuid = asyncIDToUUID[triggerAsyncId];
-    if (triggerAsyncUuid && tracers[triggerAsyncUuid]) {
-        tracers[asyncUuid] = tracers[triggerAsyncUuid];
-        tracers[asyncUuid].relatedAsyncUuids.add(asyncUuid);
+    if (tracers[triggerAsyncId]) {
+        tracers[asyncId] = tracers[triggerAsyncId];
+        tracers[asyncId].relatedAsyncIds.add(asyncId);
     }
 
     if (hasKeepAliveBug && (type === 'TCPWRAP' || type === 'HTTPPARSER')) {
@@ -73,40 +49,14 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 
 
 /**
- * get the async UUID of the currently active async ID.
- * @returns {null|*} the async UUID.
- */
-function getAsyncUUID() {
-    const currentAsyncId = asyncHooks.executionAsyncId();
-    const currentAsyncUuid = asyncIDToUUID[currentAsyncId];
-    if (!currentAsyncUuid) {
-        return null;
-    }
-
-    return currentAsyncUuid;
-}
-
-/**
  * Creates a reference to another asyncId
- * @param {string} asyncUuid sets the reference to this asyncUuid
+ * @param {Number} asyncId sets the reference to this asyncId
  */
-function setAsyncReference(asyncUuid) {
-    if (!asyncUuid) {
-        return;
-    }
-
-    const tracer = tracers[asyncUuid];
-    if (!tracer) {
-        return;
-    }
-
-    const currentAsyncUuid = getAsyncUUID();
-    if (!currentAsyncUuid) {
-        return;
-    }
-
-    tracers[currentAsyncUuid] = tracer;
-    tracer.relatedAsyncUuids.add(currentAsyncUuid);
+function setAsyncReference(asyncId) {
+    if (!tracers[asyncId]) return;
+    const currentAsyncId = asyncHooks.executionAsyncId();
+    tracers[currentAsyncId] = tracers[asyncId];
+    tracers[currentAsyncId].relatedAsyncIds.add(currentAsyncId);
 }
 
 
@@ -118,20 +68,12 @@ function setAsyncReference(asyncUuid) {
  *    if false then if will be removed
  */
 function setMainReference(add = true) {
-    const currentAsyncUuid = getAsyncUUID();
-    if (!currentAsyncUuid) {
-        return;
-    }
-
-    const tracer = tracers[currentAsyncUuid];
-    if (!tracer) {
-        return;
-    }
-
+    const currentAsyncId = asyncHooks.executionAsyncId();
+    if (!tracers[currentAsyncId]) return;
     if (add) {
-        tracer.mainAsyncUuids.add(currentAsyncUuid);
+        tracers[currentAsyncId].mainAsyncIds.add(currentAsyncId);
     } else {
-        tracer.mainAsyncUuids.delete(currentAsyncUuid);
+        tracers[currentAsyncId].mainAsyncIds.delete(currentAsyncId);
     }
 }
 
@@ -144,12 +86,10 @@ function setMainReference(add = true) {
  */
 function RunInContext(createTracer, handle) {
     const tracer = createTracer();
-    tracer.relatedAsyncUuids = new Set();
-    tracer.mainAsyncUuids = new Set();
-
-    const currentAsyncUuid = getAsyncUUID();
-    if (currentAsyncUuid) {
-        tracers[currentAsyncUuid] = tracer;
+    tracer.relatedAsyncIds = new Set();
+    tracer.mainAsyncIds = new Set();
+    if (tracer != null) {
+        tracers[asyncHooks.executionAsyncId()] = tracer;
     }
     return handle();
 }
@@ -159,12 +99,7 @@ function RunInContext(createTracer, handle) {
  * @return {Object} tracer object
  */
 function get() {
-    const currentAsyncUuid = getAsyncUUID();
-    if (!currentAsyncUuid || !tracers[currentAsyncUuid]) {
-        return null;
-    }
-
-    return tracers[currentAsyncUuid];
+    return tracers[asyncHooks.executionAsyncId()] || null;
 }
 
 /**
@@ -204,7 +139,7 @@ function privateCheckTTLConditions(shouldDelete) {
         console.log(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach((tracer) => {
-            tracer.relatedAsyncUuids.forEach((id) => {
+            tracer.relatedAsyncIds.forEach((id) => {
                 delete tracers[id];
             });
         });
@@ -237,5 +172,4 @@ module.exports = {
     disableTracing,
     isTracingEnabled,
     setMainReference,
-    getAsyncUUID,
 };

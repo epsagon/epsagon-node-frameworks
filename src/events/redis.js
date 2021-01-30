@@ -2,11 +2,12 @@
  * @fileoverview Wraps redis calls to support async context propagation
  */
 
+const asyncHooks = require('async_hooks');
 const {
     tracer,
     moduleUtils,
 } = require('epsagon');
-const { setAsyncReference, getAsyncUUID } = require('../trace_context');
+const { setAsyncReference } = require('../trace_context');
 
 /**
  * Wraps the redis' send command function with tracing
@@ -23,12 +24,12 @@ function redisClientWrapper(wrappedFunction) {
                 return wrappedFunction.apply(this, [commandObj]);
             }
 
-            const originalAsyncUuid = getAsyncUUID();
+            const originalAsyncId = asyncHooks.executionAsyncId();
 
             const { callback } = commandObj;
 
             commandObj.callback = (err, res) => { // eslint-disable-line no-param-reassign
-                setAsyncReference(originalAsyncUuid);
+                setAsyncReference(originalAsyncId);
 
                 if (callback) {
                     callback(err, res);

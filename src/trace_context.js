@@ -3,6 +3,7 @@
  */
 
 const asyncHooks = require('async_hooks');
+const { eventInterface } = require('epsagon');
 const semver = require('semver');
 
 // https://github.com/nodejs/node/issues/19859
@@ -121,6 +122,11 @@ function init() {
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
         console.log(`[resource-monitor] found ${Object.keys(tracers).length}, deleting`);
+
+        Object.values(tracer).forEach(tracer => {
+            eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_hourly: true });
+        });
+
         tracers = {};
     }
 }
@@ -139,6 +145,7 @@ function privateCheckTTLConditions(shouldDelete) {
         console.log(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach((tracer) => {
+            eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_ttl: true });
             tracer.relatedAsyncIds.forEach((id) => {
                 delete tracers[id];
             });

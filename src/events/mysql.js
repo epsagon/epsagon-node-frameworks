@@ -36,6 +36,7 @@ function mysqlQueryWrapper(wrappedFunction) {
             let overrideInnerCallback = false;
 
             const originalAsyncId = asyncHooks.executionAsyncId();
+            const tracerObj = tracer.getTrace();
 
             if (sql.onResult) {
                 params = sql.values;
@@ -51,7 +52,7 @@ function mysqlQueryWrapper(wrappedFunction) {
             }
 
             const patchedCallback = (error, results, fields) => {
-                setAsyncReference(originalAsyncId);
+                traceContext.setAsyncReference(originalAsyncId, tracerObj);
 
                 if (callback) {
                     callback(error, results, fields);
@@ -85,9 +86,10 @@ function mysqlGetConnectionWrapper(wrappedFunction) {
         let patchedCallback = callback;
         try {
             const originalAsyncId = asyncHooks.executionAsyncId();
+            const tracerObj = tracer.getTrace();
 
             patchedCallback = (error, rconnection) => {
-                setAsyncReference(originalAsyncId);
+                traceContext.setAsyncReference(originalAsyncId, tracerObj);
 
                 if (callback) {
                     callback(error, rconnection);

@@ -44,10 +44,10 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('[express] - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
-            traceContext.setAsyncReference(originalAsyncId);
+            traceContext.setAsyncReference(originalAsyncId, tracerObj);
             utils.debugLog('[express] - creating response promise');
             res.once('close', function handleResponse() {
-                traceContext.setAsyncReference(originalAsyncId);
+                traceContext.setAsyncReference(originalAsyncId, tracerObj);
                 traceContext.setMainReference();
                 utils.debugLog('[express] - got close event, handling response');
                 if (

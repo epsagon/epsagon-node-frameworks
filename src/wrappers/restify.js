@@ -95,8 +95,6 @@ function restifyMiddleware(req, res, next, originalCallback) {
  * @return {Function} updated wrapped use
  */
 function restifyWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalRestifyWrapper(opts, callback) {
         const originalCallback = callback;
         const patchedCallback = (req, res, next) => traceContext.RunInContext(

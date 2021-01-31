@@ -91,8 +91,6 @@ function pubSubSubscriberMiddleware(message, originalHandler, requestFunctionThi
  * @return {Function} updated wrapped init
  */
 function pubSubSubscriberWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalPubSubSubscriberWrapper(eventName, callback) {
         if (eventName !== 'message') {
             return wrappedFunction.apply(this, [eventName, callback]);

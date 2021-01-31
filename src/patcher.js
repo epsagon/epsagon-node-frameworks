@@ -3,6 +3,7 @@
  * IMPORTANT: when requiring this module, all of the libraries will be automatically patched!
  */
 const { config, utils } = require('epsagon');
+const traceContext = require('./trace_context');
 const hapiPatcher = require('./wrappers/hapi.js');
 const expressPatcher = require('./wrappers/express.js');
 const koaPatcher = require('./wrappers/koa.js');
@@ -59,6 +60,7 @@ function patch(patcher) {
 
 
 if (!config.getConfig().isEpsagonPatchDisabled) {
+    traceContext.init();
     if (!config.getConfig().patchWhitelist) {
         [
             expressPatcher,

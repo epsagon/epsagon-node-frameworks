@@ -3,7 +3,7 @@
  */
 
 const asyncHooks = require('async_hooks');
-const { eventInterface } = require('epsagon');
+const { eventInterface, tracer: originalTracer } = require('epsagon');
 const semver = require('semver');
 
 // https://github.com/nodejs/node/issues/19859
@@ -115,6 +115,7 @@ function init() {
         promiseResolve: destroyAsync,
     });
     hook.enable();
+    originalTracer.getTrace = get;
 }
 
 /**

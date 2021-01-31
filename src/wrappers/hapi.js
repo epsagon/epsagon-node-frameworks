@@ -102,8 +102,6 @@ function hapiMiddleware(request, h, originalHandler) {
  * @return {Function} updated wrapped init
  */
 function hapiRouteWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalHapiRouteWrapper() {
         // argument can be an Object or Array of Objects. We convert it for consistency
         if (!Array.isArray(arguments[0])) {

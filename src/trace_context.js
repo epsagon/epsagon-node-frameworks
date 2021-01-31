@@ -59,7 +59,7 @@ function setAsyncReference(asyncId, tracerObj = null) {
         return;
     }
     const currentAsyncId = asyncHooks.executionAsyncId();
-    tracers[currentAsyncId] = tracers[asyncId] || tracerObj;
+    tracers[currentAsyncId] = tracerObj || tracers[asyncId];
     tracers[currentAsyncId].relatedAsyncIds.add(currentAsyncId);
 }
 

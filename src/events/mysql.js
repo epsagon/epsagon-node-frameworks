@@ -2,12 +2,11 @@
  * @fileoverview Wraps mysql calls to support async context propagation
  */
 
-const asyncHooks = require('async_hooks');
 const {
     tracer,
     moduleUtils,
 } = require('epsagon');
-const { setAsyncReference } = require('../trace_context');
+const traceContext = require('../trace_context');
 
 /**
  * Parse query arguments - get the callback and params

@@ -51,12 +51,14 @@ function initAsync(asyncId, type, triggerAsyncId, resource) {
 
 /**
  * Creates a reference to another asyncId
- * @param {Number} asyncId sets the reference to this asyncId
+ * @param {Tracer} tracerObj A tracerObject to set
  */
-function setAsyncReference(asyncId) {
-    if (!tracers[asyncId]) return;
+function setAsyncReference(tracerObj) {
+    if (!tracerObj) {
+        return;
+    }
     const currentAsyncId = asyncHooks.executionAsyncId();
-    tracers[currentAsyncId] = tracers[asyncId];
+    tracers[currentAsyncId] = tracerObj;
     tracers[currentAsyncId].relatedAsyncIds.add(currentAsyncId);
 }
 

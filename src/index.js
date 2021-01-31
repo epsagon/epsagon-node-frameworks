@@ -13,10 +13,4 @@ epsagon.disableAll = () => {
 
 epsagon.ignoreEndpoints = http.ignoreEndpoints;
 
-const originalEpsagonInit = epsagon.init;
-epsagon.init = (options) => {
-    originalEpsagonInit(options);
-    traceContext.init();
-};
-
 module.exports = epsagon;

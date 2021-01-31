@@ -132,8 +132,6 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
  * @returns {Function} The wrapped function
  */
 function amqplibConsumerWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalamqplibConsumerWrapper(queue, callback, options, cb0) {
         const channel = this;
         let patchedCallback = callback;

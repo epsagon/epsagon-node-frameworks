@@ -102,8 +102,6 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
  * @returns {Function} The wrapped function
  */
 function bunnybusConsumerWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalBunnybusConsumerWrapper({ queue, handlers, options }) {
         if (!queue) {
             // Support only version >=7.0.0

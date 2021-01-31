@@ -99,8 +99,6 @@ function websocketEmitterMiddleware(message, originalHandler, requestFunctionThi
  * @return {Function} updated wrapped init
  */
 function websocketEmitterWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalWebSocketEmitterWrapper(eventName, callback) {
         if (eventName !== 'message') {
             return wrappedFunction.apply(this, [eventName, callback]);

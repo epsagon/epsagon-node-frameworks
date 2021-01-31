@@ -103,8 +103,6 @@ function kafkaMiddleware(message, originalHandler, consumer) {
  * @returns {Function} The wrapped function
  */
 function kafkaConsumerRunWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalKafkaWrapper(event, handler) {
         const consumer = this;
         if (event !== 'message') {

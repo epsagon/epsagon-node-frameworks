@@ -191,8 +191,6 @@ function useWrapper(original) {
  */
 function expressWrapper(wrappedFunction) {
     utils.debugLog('[express] - wrapping express');
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalExpressWrapper() {
         utils.debugLog('[express] - express app created');
         const result = wrappedFunction.apply(this, arguments);

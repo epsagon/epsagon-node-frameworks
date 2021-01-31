@@ -191,8 +191,6 @@ function natsSubscribeWrapper(wrappedFunction, serverHostname, jsonConnectProper
  * @return {Function} nats connect function response.
  */
 function natsConnectWrapper(connectFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalNatsConnectWrapper(url, opts) {
         const connectFunctionResponse = connectFunction.apply(this, [url, opts]);
         try {

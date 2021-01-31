@@ -68,8 +68,6 @@ async function koaMiddleware(ctx, next) {
  * @return {Function} updated wrapped use
  */
 function koaWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalKoaWrapper() {
         const result = wrappedFunction.apply(this, arguments);
         if (this.__EPSAGON_PATCH) {

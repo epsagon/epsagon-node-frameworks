@@ -149,8 +149,6 @@ function sqsConsumerMiddleware(messages, app) {
  * @return {Function} updated wrapped init
  */
 function sqsConsumerWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalSqsConsumerWrapper(options) {
         utils.debugLog('sqs-consumer - inside wrapper');
         utils.debugLog(`sqs-consumer - options: ${options}`);

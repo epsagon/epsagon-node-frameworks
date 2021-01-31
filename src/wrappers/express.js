@@ -3,7 +3,6 @@
  * @fileoverview Handlers for Express instrumentation
  */
 
-const asyncHooks = require('async_hooks');
 const {
     tracer,
     utils,

@@ -2,7 +2,6 @@
  * @fileoverview Wraps redis calls to support async context propagation
  */
 
-const asyncHooks = require('async_hooks');
 const {
     tracer,
     moduleUtils,

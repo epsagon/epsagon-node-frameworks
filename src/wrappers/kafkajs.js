@@ -107,8 +107,6 @@ function kafkaMiddleware(message, originalHandler) {
  * @returns {Function} The wrapped function
  */
 function kafkaConsumerRunWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalKafkaWrapper(options) {
         // Add middleware only if eachMessage exists
         if (!options.eachMessage) {

@@ -138,8 +138,6 @@ function amqpSubscriberMiddleware(
  * @returns {Function} The wrapped function
  */
 function amqpSubscribeWrapper(wrappedFunction) {
-    traceContext.init();
-    tracer.getTrace = traceContext.get;
     return function internalamqpSubscribeWrapper(options, messageListener, oldConsumerTag) {
         const queue = this;
         const originalCallback = typeof options === 'function' ? options : messageListener;

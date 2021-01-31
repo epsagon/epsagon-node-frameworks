@@ -29,7 +29,6 @@ function expressMiddleware(req, res, next) {
     if (!tracerObj) {
         utils.debugLog('[express] - no tracer found on init');
     }
-    const originalAsyncId = asyncHooks.executionAsyncId();
     if (shouldIgnore(req.originalUrl, req.headers)) {
         utils.debugLog(`Ignoring request: ${req.originalUrl}`);
         next();
@@ -44,10 +43,10 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('[express] - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
-            traceContext.setAsyncReference(originalAsyncId, tracerObj);
+            traceContext.setAsyncReference(tracerObj);
             utils.debugLog('[express] - creating response promise');
             res.once('close', function handleResponse() {
-                traceContext.setAsyncReference(originalAsyncId, tracerObj);
+                traceContext.setAsyncReference(tracerObj);
                 traceContext.setMainReference();
                 utils.debugLog('[express] - got close event, handling response');
                 if (
@@ -95,7 +94,7 @@ function expressMiddleware(req, res, next) {
  * @returns {*} wrapeed function
  */
 function nextWrapper(next) {
-    const asyncId = asyncHooks.executionAsyncId();
+    const tracerObj = tracer.getTrace();
     const originalNext = next;
     return function internalNextWrapper(error) {
         utils.debugLog('[express] - middleware executed');
@@ -104,7 +103,7 @@ function nextWrapper(next) {
             utils.debugLog(error);
         }
 
-        traceContext.setAsyncReference(asyncId);
+        traceContext.setAsyncReference(tracerObj);
         const result = originalNext(...arguments);
         return result;
     };

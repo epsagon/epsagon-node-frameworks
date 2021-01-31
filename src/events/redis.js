@@ -7,7 +7,7 @@ const {
     tracer,
     moduleUtils,
 } = require('epsagon');
-const { setAsyncReference } = require('../trace_context');
+const traceContext = require('../trace_context.js');
 
 /**
  * Wraps the redis' send command function with tracing
@@ -24,12 +24,12 @@ function redisClientWrapper(wrappedFunction) {
                 return wrappedFunction.apply(this, [commandObj]);
             }
 
-            const originalAsyncId = asyncHooks.executionAsyncId();
+            const tracerObj = tracer.getTrace();
 
             const { callback } = commandObj;
 
             commandObj.callback = (err, res) => { // eslint-disable-line no-param-reassign
-                setAsyncReference(originalAsyncId);
+                traceContext.setAsyncReference(tracerObj);
 
                 if (callback) {
                     callback(err, res);

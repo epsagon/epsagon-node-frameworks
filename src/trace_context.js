@@ -3,7 +3,7 @@
  */
 
 const asyncHooks = require('async_hooks');
-const { eventInterface, tracer: originalTracer } = require('epsagon');
+const { eventInterface, tracer: originalTracer, utils } = require('epsagon');
 const semver = require('semver');
 
 // https://github.com/nodejs/node/issues/19859
@@ -124,7 +124,7 @@ function init() {
  */
 function privateClearTracers(maxTracers) {
     if (Object.keys(tracers).length > maxTracers) {
-        console.log(`[resource-monitor] found ${Object.keys(tracers).length}, deleting`);
+        utils.debugLog(`[resource-monitor] found ${Object.keys(tracers).length}, deleting`);
 
         Object.values(tracers).forEach((tracer) => {
             eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_hourly: true });
@@ -144,8 +144,8 @@ function privateCheckTTLConditions(shouldDelete) {
         .filter(tracer => shouldDelete(tracer));
 
     if (passedTTL.length) {
-        console.log(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
-        console.log(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
+        utils.debugLog(`[resource-monitor] found ${passedTTL.length} tracers to remove`);
+        utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach((tracer) => {
             eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_ttl: true });
@@ -154,7 +154,7 @@ function privateCheckTTLConditions(shouldDelete) {
             });
         });
 
-        console.log(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`);
+        utils.debugLog(`[resource-monitor] tracers after delete: ${Object.values(tracers).length}`);
     }
 }
 

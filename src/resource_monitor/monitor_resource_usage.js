@@ -15,7 +15,7 @@ function monitorResources() {
         const usedMemory = 1 - osUtils.freememPercentage();
 
         if (usedCPU > MAX_CPU_USAGE || usedMemory > MAX_MEM_USAGE) {
-            console.log(
+            epsagon.utils.printWarning(
                 `[resource-monitor] cpu/mem exceeded allowed limit, disabling epsagon, cpu: ${usedCPU}, mem: ${usedMemory}`
             );
 

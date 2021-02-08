@@ -216,11 +216,13 @@ function expressListenWrapper(wrappedFunction) {
 
             // Setting the express err as an Epsagon err
             if (err) {
-                req.epsagon.setError({
-                    name: 'Error',
-                    message: err.message,
-                    stack: err.stack,
-                });
+                if (req && req.epsagon) {
+                    req.epsagon.setError({
+                        name: 'Error',
+                        message: err.message,
+                        stack: err.stack,
+                    });
+                }
                 return next(err);
             }
             return next();

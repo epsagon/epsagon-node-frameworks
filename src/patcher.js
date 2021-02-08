@@ -19,6 +19,7 @@ const superagentPatcher = require('./events/superagent.js');
 const superagentWrapperPatcher = require('./events/superagent-wrapper.js');
 const redisPatcher = require('./events/redis.js');
 const mysqlPatcher = require('./events/mysql.js');
+const mongodbPatcher = require('./events/mongodb.js');
 const wsPatcher = require('./wrappers/ws.js');
 const restifyPatcher = require('./wrappers/restify.js');
 
@@ -41,6 +42,7 @@ const LIBNAME_TO_PATCHER = {
     ws: wsPatcher,
     restify: restifyPatcher,
     mysql: mysqlPatcher,
+    mongodb: mongodbPatcher,
 };
 
 
@@ -80,6 +82,7 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
             wsPatcher,
             restifyPatcher,
             mysqlPatcher,
+            mongodbPatcher,
         ].forEach(patch);
     } else {
         config.getConfig().patchWhitelist.forEach(

@@ -89,9 +89,9 @@ function setMainReference(add = true) {
  */
 function RunInContext(createTracer, handle) {
     const tracer = createTracer();
-    tracer.relatedAsyncIds = new Set();
-    tracer.mainAsyncIds = new Set();
     if (tracer != null) {
+        tracer.relatedAsyncIds = new Set();
+        tracer.mainAsyncIds = new Set();
         tracers[asyncHooks.executionAsyncId()] = tracer;
     }
     return handle();

@@ -118,16 +118,20 @@ function fastifyMiddleware(request, reply) {
 function fastifyWrapper(wrappedFunction) {
     utils.debugLog('[fastify] - wrapping');
     return function internalFastifyWrapper(functions, runner, request, reply, cb) {
-        if (cb && cb instanceof Function && cb.name !== 'runPreParsing') {
-            utils.debugLog('[fastify] - incoming callback type is not runPreParsing');
-            return wrappedFunction.apply(this, arguments);
-        }
-        utils.debugLog('[fastify] - incoming request');
-        if (traceContext.isTracingEnabled()) {
-            traceContext.RunInContext(
-                tracer.createTracer,
-                () => fastifyMiddleware(request, reply)
-            );
+        try {
+            if (cb && cb instanceof Function && cb.name !== 'runPreParsing') {
+                utils.debugLog('[fastify] - incoming callback type is not runPreParsing');
+                return wrappedFunction.apply(this, arguments);
+            }
+            utils.debugLog('[fastify] - incoming request');
+            if (traceContext.isTracingEnabled()) {
+                traceContext.RunInContext(
+                    tracer.createTracer,
+                    () => fastifyMiddleware(request, reply)
+                );
+            }
+        } catch (err) {
+            utils.debugLog(`[fastify] - failed wrapping ${err}`);
         }
         utils.debugLog('[fastify] - calling the original function');
         return wrappedFunction.apply(this, arguments);

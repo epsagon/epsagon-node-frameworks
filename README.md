@@ -188,6 +188,7 @@ The following frameworks are supported by Epsagon Frameworks.
 |[Hapi](#hapi)                           |`>=17.0.0`                 |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Koa](#koa)                             |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[restify](#restify)                     |`>=7.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[fastify](#fastify)                     |`>=3.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[KafkaJS](#kafkajs)                     |`>=1.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[kafka-node](#kafka-node)               |`>=3.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[PubSub](#pubsub)                       |`>=1.1.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
@@ -310,6 +311,34 @@ function respond(req, res, next) {
   req.epsagon.label('key', 'value');
   req.epsagon.setError(Error('My custom error'));
 }
+```
+
+### fastify
+
+Tracing fastify application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the application is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+fastify.get('/', (request, reply) => {
+  request.epsagon.label('key', 'value');
+  request.epsagon.setError(Error('My custom error'));
+  reply.send({ hello: 'world' })
+})
 ```
 
 ### KafkaJS

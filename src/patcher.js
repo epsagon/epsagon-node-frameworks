@@ -22,6 +22,7 @@ const mysqlPatcher = require('./events/mysql.js');
 const mongodbPatcher = require('./events/mongodb.js');
 const wsPatcher = require('./wrappers/ws.js');
 const restifyPatcher = require('./wrappers/restify.js');
+const fastifyPatcher = require('./wrappers/fastify.js');
 
 
 const LIBNAME_TO_PATCHER = {
@@ -81,6 +82,7 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
             redisPatcher,
             wsPatcher,
             restifyPatcher,
+            fastifyPatcher,
             mysqlPatcher,
             mongodbPatcher,
         ].forEach(patch);

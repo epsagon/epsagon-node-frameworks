@@ -15,6 +15,38 @@ const { shouldIgnore } = require('../http.js');
 const { methods } = require('../consts');
 
 /**
+ * Wraps with promise express finish event
+ * @param {Object} req The Express's request data
+ * @param {Object} tracerObj Epsagon's traces
+ * @param {Object} expressEvent Express event
+ * @param {Date} startTime Event's start date
+ * @param {Promise} resolve Promise resolved
+ * @param {Object} parent Parent this
+ */
+function handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, parent) {
+    traceContext.setAsyncReference(tracerObj);
+    traceContext.setMainReference();
+    utils.debugLog('[express] - got close event, handling response');
+    if (
+        ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
+        (!req.route)
+    ) {
+        utils.debugLog('[express] - req.route not set - not reporting trace');
+        return;
+    }
+    try {
+        expressRunner.finishRunner(expressEvent, parent, req, startTime);
+        utils.debugLog('[express] - finished runner');
+    } catch (err) {
+        tracer.addException(err);
+    }
+    utils.debugLog('[express] - sending trace');
+    tracer.sendTrace(() => {}, tracerObj).then(resolve).then(() => {
+        utils.debugLog('[express] - trace sent + request resolved');
+    });
+}
+
+/**
  * Express requests middleware that runs in context
  * @param {Request} req The Express's request data
  * @param {Response} res The Express's response data
@@ -42,29 +74,30 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('[express] - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
+            let isFinished = false;
             traceContext.setAsyncReference(tracerObj);
             utils.debugLog('[express] - creating response promise');
             res.once('close', function handleResponse() {
-                traceContext.setAsyncReference(tracerObj);
-                traceContext.setMainReference();
-                utils.debugLog('[express] - got close event, handling response');
-                if (
-                    ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
-                    (!req.route)
-                ) {
-                    utils.debugLog('[express] - req.route not set - not reporting trace');
-                    return;
+                if (!isFinished) {
+                    isFinished = true;
+                    handleExpressRequestFinished(req,
+                        tracerObj,
+                        expressEvent,
+                        startTime,
+                        resolve,
+                        this);
                 }
-                try {
-                    expressRunner.finishRunner(expressEvent, this, req, startTime);
-                    utils.debugLog('[express] - finished runner');
-                } catch (err) {
-                    tracer.addException(err);
+            });
+            res.once('finish', function handleResponse() {
+                if (!isFinished) {
+                    isFinished = true;
+                    handleExpressRequestFinished(req,
+                        tracerObj,
+                        expressEvent,
+                        startTime,
+                        resolve,
+                        this);
                 }
-                utils.debugLog('[express] - sending trace');
-                tracer.sendTrace(() => {}, tracerObj).then(resolve).then(() => {
-                    utils.debugLog('[express] - trace sent + request resolved');
-                });
             });
         });
         tracer.addRunner(expressEvent, requestPromise);

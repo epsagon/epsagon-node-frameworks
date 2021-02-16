@@ -14,6 +14,15 @@ const expressRunner = require('../runners/express.js');
 const { shouldIgnore } = require('../http.js');
 const { methods } = require('../consts');
 
+/**
+ * Wraps with promise express finish event
+ * @param {Object} req The Express's request data
+ * @param {Object} tracerObj Epsagon's traces
+ * @param {Object} expressEvent Express event
+ * @param {Date} startTime Event's start date
+ * @param {Promise} resolve Promise resolved
+ * @param {Object} parent Parent this
+ */
 function handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, parent) {
     traceContext.setAsyncReference(tracerObj);
     traceContext.setMainReference();
@@ -70,16 +79,26 @@ function expressMiddleware(req, res, next) {
             utils.debugLog('[express] - creating response promise');
             res.once('close', function handleResponse() {
                 if (!isFinished) {
-                    isFinished = true
-                    handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, this)
+                    isFinished = true;
+                    handleExpressRequestFinished(req,
+                        tracerObj,
+                        expressEvent,
+                        startTime,
+                        resolve,
+                        this);
                 }
             });
             res.once('finish', function handleResponse() {
                 if (!isFinished) {
-                    isFinished = true
-                    handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, this)
+                    isFinished = true;
+                    handleExpressRequestFinished(req,
+                        tracerObj,
+                        expressEvent,
+                        startTime,
+                        resolve,
+                        this);
                 }
-            })
+            });
         });
         tracer.addRunner(expressEvent, requestPromise);
         utils.debugLog('[express] - added runner');

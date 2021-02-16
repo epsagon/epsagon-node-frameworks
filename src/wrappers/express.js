@@ -14,6 +14,29 @@ const expressRunner = require('../runners/express.js');
 const { shouldIgnore } = require('../http.js');
 const { methods } = require('../consts');
 
+function handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, parent) {
+    traceContext.setAsyncReference(tracerObj);
+    traceContext.setMainReference();
+    utils.debugLog('[express] - got close event, handling response');
+    if (
+        ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
+        (!req.route)
+    ) {
+        utils.debugLog('[express] - req.route not set - not reporting trace');
+        return;
+    }
+    try {
+        expressRunner.finishRunner(expressEvent, parent, req, startTime);
+        utils.debugLog('[express] - finished runner');
+    } catch (err) {
+        tracer.addException(err);
+    }
+    utils.debugLog('[express] - sending trace');
+    tracer.sendTrace(() => {}, tracerObj).then(resolve).then(() => {
+        utils.debugLog('[express] - trace sent + request resolved');
+    });
+}
+
 /**
  * Express requests middleware that runs in context
  * @param {Request} req The Express's request data
@@ -42,30 +65,23 @@ function expressMiddleware(req, res, next) {
         utils.debugLog('[express] - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
+            let isFinished = false;
             traceContext.setAsyncReference(tracerObj);
             utils.debugLog('[express] - creating response promise');
             res.once('close', function handleResponse() {
-                traceContext.setAsyncReference(tracerObj);
-                traceContext.setMainReference();
-                utils.debugLog('[express] - got close event, handling response');
-                if (
-                    ((process.env.EPSAGON_ALLOW_NO_ROUTE || '').toUpperCase() !== 'TRUE') &&
-                    (!req.route)
-                ) {
-                    utils.debugLog('[express] - req.route not set - not reporting trace');
-                    return;
+                if (!isFinished) {
+                    console.log('close')
+                    isFinished = true
+                    handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, this)
                 }
-                try {
-                    expressRunner.finishRunner(expressEvent, this, req, startTime);
-                    utils.debugLog('[express] - finished runner');
-                } catch (err) {
-                    tracer.addException(err);
-                }
-                utils.debugLog('[express] - sending trace');
-                tracer.sendTrace(() => {}, tracerObj).then(resolve).then(() => {
-                    utils.debugLog('[express] - trace sent + request resolved');
-                });
             });
+            res.once('finish', function handleResponse() {
+                if (!isFinished) {
+                    console.log('finish')
+                    isFinished = true
+                    handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, this)
+                }
+            })
         });
         tracer.addRunner(expressEvent, requestPromise);
         utils.debugLog('[express] - added runner');

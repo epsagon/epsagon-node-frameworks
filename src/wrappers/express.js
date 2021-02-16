@@ -70,14 +70,12 @@ function expressMiddleware(req, res, next) {
             utils.debugLog('[express] - creating response promise');
             res.once('close', function handleResponse() {
                 if (!isFinished) {
-                    console.log('close')
                     isFinished = true
                     handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, this)
                 }
             });
             res.once('finish', function handleResponse() {
                 if (!isFinished) {
-                    console.log('finish')
                     isFinished = true
                     handleExpressRequestFinished(req, tracerObj, expressEvent, startTime, resolve, this)
                 }

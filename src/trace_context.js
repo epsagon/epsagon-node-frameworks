@@ -127,7 +127,9 @@ function privateClearTracers(maxTracers) {
         utils.debugLog(`[resource-monitor] found ${Object.keys(tracers).length}, deleting`);
 
         Object.values(tracers).forEach((tracer) => {
-            eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_hourly: true });
+            if (tracer.currRunner) {
+                eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_hourly: true });
+            }
         });
 
         tracers = {};
@@ -148,7 +150,10 @@ function privateCheckTTLConditions(shouldDelete) {
         utils.debugLog(`[resource-monitor] tracers before delete: ${Object.values(tracers).length}`);
 
         passedTTL.forEach((tracer) => {
-            eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_ttl: true });
+            if (tracer.currRunner) {
+                eventInterface.addToMetadata(tracer.currRunner, { instrum_cleared_ttl: true });
+            }
+
             tracer.relatedAsyncIds.forEach((id) => {
                 delete tracers[id];
             });

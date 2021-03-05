@@ -51,6 +51,8 @@ function handleResponse(hapiEvent, request, response, startTime, hapiErr) {
  * @return {Object} response
  */
 function hapiMiddleware(request, h, originalHandler) {
+    traceContext.setAsyncReference(tracer.getTrace());
+    traceContext.setMainReference();
     // Initialize tracer
     tracer.restart();
 

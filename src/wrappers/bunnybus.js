@@ -25,6 +25,9 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
     let runnerResult;
     try {
         // Initialize tracer and runner.
+        const tracerObj = tracer.getTrace();
+        traceContext.setAsyncReference(tracerObj);
+        traceContext.setMainReference();
         tracer.restart();
         const { slsEvent: amqpEvent, startTime: amqpStartTime } =
         eventInterface.initializeEvent(

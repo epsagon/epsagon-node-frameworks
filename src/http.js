@@ -6,6 +6,20 @@ const EPSAGON_HEADER = 'epsagon-trace-id';
 const IGNORED_HEADERS = {
     'user-agent': 'elb-healthchecker/2.0',
 };
+const IGNORED_FILETYPES = [
+    'txt',
+    'html',
+    'jpg',
+    'png',
+    'css',
+    'js',
+    'jsx',
+    'woff',
+    'woff2',
+    'ttf',
+    'eot',
+    'ico',
+];
 
 /**
  * Sets the ignored endpoints for the frameworks
@@ -46,6 +60,10 @@ function shouldIgnore(path, headers) {
             const headerKey = Object.keys(headers).find(header => header.toLowerCase() === key);
             return headerKey && headers[headerKey].toLowerCase() === IGNORED_HEADERS[key];
         }).includes(true);
+    }
+    // Ignore static file types
+    if (IGNORED_FILETYPES.includes(path.split('.').pop())) {
+        return true;
     }
     return ignoredEndpoints.filter(
         endpoint => path.startsWith(endpoint)

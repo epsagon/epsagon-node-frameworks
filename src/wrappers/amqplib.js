@@ -24,9 +24,9 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
     let runnerResult;
     let nodeEvent;
     let nodeStartTime;
-    const tracerObj = tracer.getTrace();
-    traceContext.setAsyncReference(tracerObj);
-    traceContext.setMainReference();
+    // const tracerObj = tracer.getTrace();
+    // traceContext.setAsyncReference(tracerObj);
+    // traceContext.setMainReference();
     try {
         if (message.properties.headers.bunnyBus) {
             utils.debugLog('[amqplib] Skipping BunnyBus messages');

@@ -2,6 +2,7 @@
  * @fileoverview Handlers for BunnyBus instrumentation
  */
 
+const asyncHooks = require('async_hooks');
 const {
     tracer,
     moduleUtils,
@@ -68,7 +69,16 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
         eventInterface.createTraceIdMetadata(nodeEvent);
 
         try {
-            runnerResult = callback(handlerParams);
+            utils.debugLog(`EREZ DEBUG:: current async id : ${asyncHooks.executionAsyncId()}`);
+            utils.debugLog(`EREZ DEBUG:: trigger async id : ${asyncHooks.triggerAsyncId()}`);
+            const patchedCallback = (params) => {
+                traceContext.setAsyncReference(tracerObj);
+                if (callback) {
+                    return callback(params);
+                }
+                return null;
+            };
+            runnerResult = patchedCallback(handlerParams);
         } catch (err) {
             originalHandlerSyncErr = err;
         }

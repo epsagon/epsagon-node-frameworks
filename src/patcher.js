@@ -12,14 +12,15 @@ const natsPatcher = require('./wrappers/nats.js');
 const kafkajsPatcher = require('./wrappers/kafkajs.js');
 const kafkaNodePatcher = require('./wrappers/kafka-node.js');
 const sqsConsumerPatcher = require('./wrappers/sqs-consumer.js');
-const amqplibPatcher = require('./wrappers/amqplib.js');
-const amqpPatcher = require('./wrappers/amqp.js');
+// const amqplibPatcher = require('./wrappers/amqplib.js');
+// const amqpPatcher = require('./wrappers/amqp.js');
 const bunnybusPatcher = require('./wrappers/bunnybus.js');
 const superagentPatcher = require('./events/superagent.js');
 const superagentWrapperPatcher = require('./events/superagent-wrapper.js');
 const redisPatcher = require('./events/redis.js');
 const mysqlPatcher = require('./events/mysql.js');
 const mongodbPatcher = require('./events/mongodb.js');
+const httpPatcher = require('./events/http.js');
 const wsPatcher = require('./wrappers/ws.js');
 const restifyPatcher = require('./wrappers/restify.js');
 const fastifyPatcher = require('./wrappers/fastify.js');
@@ -34,8 +35,8 @@ const LIBNAME_TO_PATCHER = {
     kafkajs: kafkajsPatcher,
     kafkanode: kafkaNodePatcher,
     sqsconsumer: sqsConsumerPatcher,
-    amqplib: amqplibPatcher,
-    amqp: amqpPatcher,
+    // amqplib: amqplibPatcher,
+    // amqp: amqpPatcher,
     bunnybus: bunnybusPatcher,
     superagent: superagentPatcher,
     superagentWrapper: superagentWrapperPatcher,
@@ -44,6 +45,7 @@ const LIBNAME_TO_PATCHER = {
     restify: restifyPatcher,
     mysql: mysqlPatcher,
     mongodb: mongodbPatcher,
+    http: httpPatcher,
 };
 
 
@@ -74,8 +76,8 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
             kafkajsPatcher,
             kafkaNodePatcher,
             sqsConsumerPatcher,
-            amqplibPatcher,
-            amqpPatcher,
+            // amqplibPatcher,
+            // amqpPatcher,
             bunnybusPatcher,
             superagentPatcher,
             superagentWrapperPatcher,
@@ -85,6 +87,7 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
             fastifyPatcher,
             mysqlPatcher,
             mongodbPatcher,
+            httpPatcher,
         ].forEach(patch);
     } else {
         config.getConfig().patchWhitelist.forEach(

@@ -80,6 +80,7 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
                 originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {
+                traceContext.setAsyncReference(tracerObj);
                 eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
                 tracer.sendTrace(() => {});
             });

@@ -73,7 +73,7 @@ function fastifyMiddleware(request, reply) {
             traceContext.setAsyncReference(tracerObj);
             utils.debugLog('[fastify] - creating response promise');
 
-            reply.raw.once('finish', function handleResponseInternal() {
+            reply.raw.once('finish', () => {
                 utils.debugLog('[fastify] - got to finish event');
                 if (!isFinished) {
                     isFinished = true;
@@ -85,10 +85,10 @@ function fastifyMiddleware(request, reply) {
                         startTime,
                         resolve,
                         Buffer.concat(chunks).toString()
-                    )
+                    );
                 }
             });
-            reply.raw.once('close', function handleResponseInternal() {
+            reply.raw.once('close', () => {
                 utils.debugLog('[fastify] - got to close event');
                 if (!isFinished) {
                     isFinished = true;
@@ -100,7 +100,7 @@ function fastifyMiddleware(request, reply) {
                         startTime,
                         resolve,
                         Buffer.concat(chunks).toString()
-                    )
+                    );
                 }
             });
         });

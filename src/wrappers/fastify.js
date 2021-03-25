@@ -69,17 +69,40 @@ function fastifyMiddleware(request, reply) {
         utils.debugLog('[fastify] - created runner');
         // Handle response
         const requestPromise = new Promise((resolve) => {
+            let isFinished = false;
             traceContext.setAsyncReference(tracerObj);
             utils.debugLog('[fastify] - creating response promise');
-            request.raw.once('end', () => handleResponse(
-                tracerObj,
-                fastifyEvent,
-                reply,
-                request,
-                startTime,
-                resolve,
-                Buffer.concat(chunks).toString()
-            ));
+
+            reply.raw.once('finish', () => {
+                utils.debugLog(`[fastify] - got to finish event. isFinished=${isFinished}`);
+                if (!isFinished) {
+                    isFinished = true;
+                    handleResponse(
+                        tracerObj,
+                        fastifyEvent,
+                        reply,
+                        request,
+                        startTime,
+                        resolve,
+                        Buffer.concat(chunks).toString()
+                    );
+                }
+            });
+            reply.raw.once('close', () => {
+                utils.debugLog(`[fastify] - got to close event. isFinished=${isFinished}`);
+                if (!isFinished) {
+                    isFinished = true;
+                    handleResponse(
+                        tracerObj,
+                        fastifyEvent,
+                        reply,
+                        request,
+                        startTime,
+                        resolve,
+                        Buffer.concat(chunks).toString()
+                    );
+                }
+            });
         });
 
         request.context._EPSAGON_EVENT = fastifyEvent;

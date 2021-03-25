@@ -74,7 +74,7 @@ function fastifyMiddleware(request, reply) {
             utils.debugLog('[fastify] - creating response promise');
 
             reply.raw.once('finish', () => {
-                utils.debugLog('[fastify] - got to finish event');
+                utils.debugLog(`[fastify] - got to finish event. isFinished=${isFinished}`);
                 if (!isFinished) {
                     isFinished = true;
                     handleResponse(
@@ -89,7 +89,7 @@ function fastifyMiddleware(request, reply) {
                 }
             });
             reply.raw.once('close', () => {
-                utils.debugLog('[fastify] - got to close event');
+                utils.debugLog(`[fastify] - got to close event. isFinished=${isFinished}`);
                 if (!isFinished) {
                     isFinished = true;
                     handleResponse(

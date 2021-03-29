@@ -25,13 +25,12 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
     let nodeEvent;
     let nodeStartTime;
     const tracerObj = tracer.getTrace();
-    traceContext.setAsyncReference(tracerObj);
-    traceContext.setMainReference();
     try {
         if (message.properties.headers.bunnyBus) {
             utils.debugLog('[amqplib] Skipping BunnyBus messages');
             return callback(message);
         }
+        traceContext.setAsyncReference(tracerObj);
 
         // Initialize tracer and runner.
         tracer.restart();
@@ -99,6 +98,8 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
                     originalHandlerAsyncError = err;
                     throw err;
                 }).finally(() => {
+                    s
+                    traceContext.setMainReference();
                     utils.debugLog('[amqplib] Original runner in finally');
                     eventInterface.finalizeEvent(
                         nodeEvent,
@@ -110,6 +111,8 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
                 });
             } else {
                 // Finalize sync user function.
+                traceContext.setAsyncReference(tracerObj);
+                traceContext.setMainReference();
                 utils.debugLog('[amqplib] Original runner is not a promise');
                 eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
                 tracer.sendTrace(() => {});

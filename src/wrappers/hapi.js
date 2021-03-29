@@ -31,6 +31,7 @@ const IGNORED_PLUGINS = [
  * @param {Error} hapiErr Optional error in case happened in route
  */
 function handleResponse(hapiEvent, request, response, startTime, hapiErr) {
+    traceContext.setMainReference();
     try {
         hapiRunner.finishRunner(hapiEvent, request, response, startTime);
         if (hapiErr) {
@@ -51,8 +52,8 @@ function handleResponse(hapiEvent, request, response, startTime, hapiErr) {
  * @return {Object} response
  */
 function hapiMiddleware(request, h, originalHandler) {
-    traceContext.setAsyncReference(tracer.getTrace());
-    traceContext.setMainReference();
+    const tracerObj = tracer.getTrace();
+    traceContext.setAsyncReference(tracerObj);
     // Initialize tracer
     tracer.restart();
 
@@ -86,8 +87,10 @@ function hapiMiddleware(request, h, originalHandler) {
     // Handle response. In some cases (plugins) it's not a promise.
     if (utils.isPromise(response)) {
         response.then(() => {
+            traceContext.setAsyncReference(tracerObj);
             handleResponse(hapiEvent, request, response, startTime);
         }).catch((err) => {
+            traceContext.setAsyncReference(tracerObj);
             handleResponse(hapiEvent, request, response, startTime, err);
         });
     } else {

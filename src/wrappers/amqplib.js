@@ -98,7 +98,6 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
                     originalHandlerAsyncError = err;
                     throw err;
                 }).finally(() => {
-                    s
                     traceContext.setMainReference();
                     utils.debugLog('[amqplib] Original runner in finally');
                     eventInterface.finalizeEvent(

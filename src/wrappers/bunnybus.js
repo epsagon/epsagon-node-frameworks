@@ -27,7 +27,6 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
         // Initialize tracer and runner.
         const tracerObj = tracer.getTrace();
         traceContext.setAsyncReference(tracerObj);
-        traceContext.setMainReference();
         tracer.restart();
         const { slsEvent: amqpEvent, startTime: amqpStartTime } =
         eventInterface.initializeEvent(
@@ -81,11 +80,13 @@ function bunnybusSubscriberMiddleware(config, callback, queue, topic, handlerPar
                 throw err;
             }).finally(() => {
                 traceContext.setAsyncReference(tracerObj);
+                traceContext.setMainReference();
                 eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
                 tracer.sendTrace(() => {});
             });
         } else {
             // Finalize sync user function.
+            traceContext.setMainReference();
             eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
             tracer.sendTrace(() => {});
         }

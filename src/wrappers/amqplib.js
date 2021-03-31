@@ -146,8 +146,8 @@ function amqplibConsumerWrapper(wrappedFunction) {
                     utils.debugLog('[amqplib] Skipping BunnyBus messages');
                     return callback(message)
                 }
-                return trace_context.RunInContext(
-                    tracer$8.createTracer,
+                return traceContext.RunInContext(
+                    tracer.createTracer,
                     () => amqplibSubscriberMiddleware(message, callback, channel)
                 );
             }

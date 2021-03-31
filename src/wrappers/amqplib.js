@@ -141,10 +141,16 @@ function amqplibConsumerWrapper(wrappedFunction) {
         const channel = this;
         let patchedCallback = callback;
         if (typeof callback === 'function') {
-            patchedCallback = message => traceContext.RunInContext(
-                tracer.createTracer,
-                () => amqplibSubscriberMiddleware(message, callback, channel)
-            );
+            patchedCallback = (message) => {
+                if (message.properties.headers.bunnyBus) {
+                    utils.debugLog('[amqplib] Skipping BunnyBus messages');
+                    return callback(message);
+                }
+                return traceContext.RunInContext(
+                    tracer.createTracer,
+                    () => amqplibSubscriberMiddleware(message, callback, channel)
+                );
+            };
         }
         return wrappedFunction.apply(this, [queue, patchedCallback, options, cb0]);
     };

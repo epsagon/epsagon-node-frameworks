@@ -64,6 +64,10 @@ function kafkaMiddleware(message, originalHandler) {
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
             'node_function', 'message_handler', 'execute', 'runner'
         );
+        // Setting runner for `message.epsagon` use.
+        const tracerObj = tracer.getTrace();
+        tracerObj.currRunner = nodeEvent;
+
         try {
             runnerResult = originalHandler(message);
         } catch (err) {

@@ -123,8 +123,6 @@ function fastifyMiddleware(request, reply) {
             label,
             setError,
             getTraceUrl,
-            traceContext,
-            tracerObj,
         };
         traceContext.setMainReference(false);
     } catch (err) {

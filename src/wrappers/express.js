@@ -72,6 +72,16 @@ function expressMiddleware(req, res, next) {
     try {
         expressEvent = expressRunner.createRunner(req, startTime);
         utils.debugLog('[express] - created runner');
+
+        const originalJson = res.json;
+        res.json = (data) => {
+            if (data && typeof data === 'string') {
+                eventInterface.addToMetadata(expressEvent, {}, { response_data: data });
+            }
+            res.json = originalJson;
+            return originalJson.call(res, data);
+        };
+
         // Handle response
         const requestPromise = new Promise((resolve) => {
             let isFinished = false;

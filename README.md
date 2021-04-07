@@ -2,7 +2,7 @@
   <a href="https://epsagon.com" target="_blank" align="center">
     <img src="https://cdn2.hubspot.net/hubfs/4636301/Positive%20RGB_Logo%20Horizontal%20-01.svg" width="300">
   </a>
-  <br />
+  <br/>
 </p>
 
 [![Build Status](https://travis-ci.com/epsagon/epsagon-node-frameworks.svg?token=wsveVqcNtBtmq6jpZfSf&branch=master)](https://travis-ci.com/epsagon/epsagon-node-frameworks)

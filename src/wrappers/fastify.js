@@ -8,7 +8,6 @@ const {
     utils,
     moduleUtils,
     eventInterface,
-    httpHelpers,
 } = require('epsagon');
 const traceContext = require('../trace_context.js');
 const fastifyRunner = require('../runners/fastify.js');
@@ -23,14 +22,13 @@ const { shouldIgnore } = require('../http.js');
  * @param {Request} request The Fastify's request data
  * @param {Int} startTime Runner start time
  * @param {Function} resolve runner promise resolve function
- * @param {String} reqBody request body
  */
-function handleResponse(tracerObj, fastifyEvent, reply, request, startTime, resolve, reqBody) {
+function handleResponse(tracerObj, fastifyEvent, reply, request, startTime, resolve) {
     traceContext.setAsyncReference(tracerObj);
     traceContext.setMainReference();
     utils.debugLog('[fastify] - got close event, handling response');
     try {
-        fastifyRunner.finishRunner(fastifyEvent, reply, request, startTime, reqBody);
+        fastifyRunner.finishRunner(fastifyEvent, reply, request, startTime);
         utils.debugLog('[fastify] - finished runner');
     } catch (err) {
         tracer.addException(err);
@@ -58,8 +56,6 @@ function fastifyMiddleware(request, reply) {
         utils.debugLog(`Ignoring request: ${request.url}`);
         return;
     }
-    const chunks = [];
-    request.raw.on('data', chunk => httpHelpers.addChunk(chunk, chunks));
 
     tracer.restart();
     let fastifyEvent;
@@ -83,8 +79,7 @@ function fastifyMiddleware(request, reply) {
                         reply,
                         request,
                         startTime,
-                        resolve,
-                        Buffer.concat(chunks).toString()
+                        resolve
                     );
                 }
             });
@@ -98,8 +93,7 @@ function fastifyMiddleware(request, reply) {
                         reply,
                         request,
                         startTime,
-                        resolve,
-                        Buffer.concat(chunks).toString()
+                        resolve
                     );
                 }
             });

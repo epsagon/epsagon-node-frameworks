@@ -35,7 +35,8 @@ function kafkaMiddleware(message, originalHandler, isBatch) {
         );
 
         const messages = isBatch ? messageData.messages : [message.message];
-        const messagesData = messages.map(messageObj => ({
+        // Taking 50 messages max.
+        const messagesData = messages.slice(0, 50).map(messageObj => ({
             offset: messageObj.offset,
             timestamp: new Date(parseInt(messageObj.timestamp, 10)).toUTCString(),
             // Convert headers from array to object and stringify them
@@ -61,6 +62,7 @@ function kafkaMiddleware(message, originalHandler, isBatch) {
         tracer.addEvent(kafkaEvent);
         eventInterface.finalizeEvent(kafkaEvent, kafkaStartTime, null, {
             'messaging.kafka.partition': messageData.partition,
+            'messaging.messages_count': messages.length,
             'epsagon.trace_ids': messageIds,
         }, {
             'messaging.messages': messagesData,

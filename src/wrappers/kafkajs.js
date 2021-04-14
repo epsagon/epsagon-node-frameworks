@@ -16,42 +16,54 @@ const { EPSAGON_HEADER } = require('../http.js');
  * acts as a middleware for `consumer.run()`
  * @param {object} message the messages param to send
  * @param {function} originalHandler original consumer function
+ * @param {Boolean} isBatch whether the method is batched
  * @returns {Object} runnerResult Promise or result object
  */
-function kafkaMiddleware(message, originalHandler) {
+function kafkaMiddleware(message, originalHandler, isBatch) {
     let originalHandlerSyncErr;
     let runnerResult;
     try {
         // Initialize tracer and runner.
         tracer.restart();
+        const messageData = isBatch ? message.batch : message;
         const { slsEvent: kafkaEvent, startTime: kafkaStartTime } =
         eventInterface.initializeEvent(
             'kafka',
-            message.topic,
+            messageData.topic,
             'consume',
             'trigger'
         );
 
-        const metadata = {
-            partition: message.partition,
-            offset: message.message.offset,
-            timestamp: new Date(parseInt(message.message.timestamp, 10)).toUTCString(),
-        };
-        if (message.message.headers[EPSAGON_HEADER]) {
-            metadata[EPSAGON_HEADER] = message.message.headers[EPSAGON_HEADER].toString();
-        }
+        const messages = isBatch ? messageData.messages : [message.message];
+        const messagesData = messages.map(messageObj => ({
+            offset: messageObj.offset,
+            timestamp: new Date(parseInt(messageObj.timestamp, 10)).toUTCString(),
+            // Convert headers from array to object and stringify them
+            headers: Object.entries(messageObj.headers).reduce((total, entry) => {
+                // eslint-disable-next-line no-param-reassign
+                total[entry[0]] = entry[1].toString();
+                return total;
+            }, {}),
+            body: messageObj.value.toString(),
+        }));
 
-        // Convert headers from array to object and stringify them
-        const headers = Object.entries(message.message.headers).reduce((total, entry) => {
-            // eslint-disable-next-line no-param-reassign
-            total[entry[0]] = entry[1].toString();
-            return total;
-        }, {});
+        const messageIds = [];
+        messages.forEach((messageObj) => {
+            if (
+                messageObj.headers &&
+                messageObj.headers[EPSAGON_HEADER] &&
+                !messageIds.includes(messageObj.headers[EPSAGON_HEADER].toString())
+            ) {
+                messageIds.push(messageObj.headers[EPSAGON_HEADER].toString());
+            }
+        });
 
         tracer.addEvent(kafkaEvent);
-        eventInterface.finalizeEvent(kafkaEvent, kafkaStartTime, null, metadata, {
-            headers,
-            body: message.message.value.toString(),
+        eventInterface.finalizeEvent(kafkaEvent, kafkaStartTime, null, {
+            'messaging.kafka.partition': messageData.partition,
+            'epsagon.trace_ids': messageIds,
+        }, {
+            'messaging.messages': messagesData,
         });
 
         const { label, setError, getTraceUrl } = tracer;
@@ -61,8 +73,9 @@ function kafkaMiddleware(message, originalHandler) {
             setError,
             getTraceUrl,
         };
+        const runnerName = `${messageData.topic}_${isBatch ? 'batch' : 'message'}_handler`;
         const { slsEvent: nodeEvent, startTime: nodeStartTime } = eventInterface.initializeEvent(
-            'node_function', 'message_handler', 'execute', 'runner'
+            'node_function', runnerName, 'execute', 'runner'
         );
         // Setting runner for `message.epsagon` use.
         const tracerObj = tracer.getTrace();
@@ -72,10 +85,6 @@ function kafkaMiddleware(message, originalHandler) {
             runnerResult = originalHandler(message);
         } catch (err) {
             originalHandlerSyncErr = err;
-        }
-
-        if (originalHandler.name) {
-            nodeEvent.getResource().setName(originalHandler.name);
         }
 
         // Handle and finalize async user function.
@@ -113,16 +122,25 @@ function kafkaMiddleware(message, originalHandler) {
 function kafkaConsumerRunWrapper(wrappedFunction) {
     return function internalKafkaWrapper(options) {
         // Add middleware only if eachMessage exists
-        if (!options.eachMessage) {
-            return wrappedFunction.apply(this, [options]);
+        if (options.eachMessage) {
+            const originalMessageHandler = options.eachMessage;
+            const patchedHandler = message => traceContext.RunInContext(
+                tracer.createTracer,
+                () => kafkaMiddleware(message, originalMessageHandler, false)
+            );
+            // eslint-disable-next-line no-param-reassign
+            options.eachMessage = patchedHandler.bind(options);
         }
-        const originalHandler = options.eachMessage;
-        const patchedHandler = message => traceContext.RunInContext(
-            tracer.createTracer,
-            () => kafkaMiddleware(message, originalHandler)
-        );
-        // eslint-disable-next-line no-param-reassign
-        options.eachMessage = patchedHandler.bind(options);
+        // Add middleware only if eachBatch exists
+        if (options.eachBatch) {
+            const originalBatchHandler = options.eachBatch;
+            const patchedHandler = message => traceContext.RunInContext(
+                tracer.createTracer,
+                () => kafkaMiddleware(message, originalBatchHandler, true)
+            );
+            // eslint-disable-next-line no-param-reassign
+            options.eachBatch = patchedHandler.bind(options);
+        }
         return wrappedFunction.apply(this, [options]);
     };
 }

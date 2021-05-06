@@ -82,7 +82,6 @@ function kafkaMiddleware(message, originalHandler, isBatch) {
             'node_function', runnerName, 'execute', 'runner'
         );
         // Setting runner for `message.epsagon` use.
-        // const tracerObj = tracer.getTrace();
         tracerObj.currRunner = nodeEvent;
 
         try {

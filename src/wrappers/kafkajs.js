@@ -24,6 +24,8 @@ function kafkaMiddleware(message, originalHandler, isBatch) {
     let runnerResult;
     try {
         // Initialize tracer and runner.
+        const tracerObj = tracer.getTrace();
+        traceContext.setAsyncReference(tracerObj);
         tracer.restart();
         const messageData = isBatch ? message.batch : message;
         const { slsEvent: kafkaEvent, startTime: kafkaStartTime } =
@@ -80,7 +82,6 @@ function kafkaMiddleware(message, originalHandler, isBatch) {
             'node_function', runnerName, 'execute', 'runner'
         );
         // Setting runner for `message.epsagon` use.
-        const tracerObj = tracer.getTrace();
         tracerObj.currRunner = nodeEvent;
 
         try {
@@ -96,11 +97,14 @@ function kafkaMiddleware(message, originalHandler, isBatch) {
                 originalHandlerAsyncError = err;
                 throw err;
             }).finally(() => {
+                traceContext.setAsyncReference(tracerObj);
+                traceContext.setMainReference();
                 eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerAsyncError);
                 tracer.sendTrace(() => {});
             });
         } else {
             // Finalize sync user function.
+            traceContext.setMainReference();
             eventInterface.finalizeEvent(nodeEvent, nodeStartTime, originalHandlerSyncErr);
             tracer.sendTrace(() => {});
         }

@@ -40,14 +40,18 @@ function parseQueueUrl(queueUrl) {
 /**
  * Handle consumer event from sqs
  * @param {Array/SQSMessage} messages list of SQSMessage or a single one.
+ * @param {object} consumer object which sometimes can pass as an argument
  * @param {object} app consumer app.
+ * @return {object/Promise} Original handler result.
  */
-function sqsConsumerMiddleware(messages, app) {
+function sqsConsumerMiddleware(messages, consumer, app) {
     utils.debugLog('sqs-consumer - starting middleware');
 
     // Currently we take only the first message
     const message = Array.isArray(messages) ? messages[0] : messages;
     let originalHandlerSyncErr;
+    let runnerResult;
+
     try {
         // Initialize tracer and runner.
         tracer.restart();
@@ -88,9 +92,9 @@ function sqsConsumerMiddleware(messages, app) {
             'node_function', 'message_handler', 'execute', 'runner'
         );
         utils.debugLog('sqs-consumer - initialized runner event');
-        let runnerResult;
+
         try {
-            runnerResult = app.originalHandleMessage(messages);
+            runnerResult = app.originalHandleMessage(messages, consumer);
             utils.debugLog('sqs-consumer - executed original handler');
         } catch (err) {
             utils.debugLog('sqs-consumer - error in original handler');
@@ -141,6 +145,8 @@ function sqsConsumerMiddleware(messages, app) {
         utils.debugLog('sqs-consumer - rethrowing original sync error');
         throw originalHandlerSyncErr;
     }
+
+    return runnerResult;
 }
 
 /**
@@ -153,9 +159,9 @@ function sqsConsumerWrapper(wrappedFunction) {
         utils.debugLog('sqs-consumer - inside wrapper');
         utils.debugLog(`sqs-consumer - options: ${options}`);
         const app = wrappedFunction.apply(this, [options]);
-        const patchedCallback = message => traceContext.RunInContext(
+        const patchedCallback = (message, consumer) => traceContext.RunInContext(
             tracer.createTracer,
-            () => sqsConsumerMiddleware(message, app)
+            () => sqsConsumerMiddleware(message, consumer, app)
         );
         if (options.handleMessage) {
             utils.debugLog('sqs-consumer - wrapping handleMessage');

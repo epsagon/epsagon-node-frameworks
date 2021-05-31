@@ -66,6 +66,7 @@ The simplest way to get started is to run your node command with the following e
 ```sh
 export EPSAGON_TOKEN=<epsagon-token>
 export EPSAGON_APP_NAME=<app-name-stage>
+export EPSAGON_METADATA=FALSE
 NODE_OPTIONS='-r epsagon-frameworks' <command>
 ```
 
@@ -73,6 +74,7 @@ For example:
 ```sh
 export EPSAGON_TOKEN=<your-token>
 export EPSAGON_APP_NAME=express-prod
+export EPSAGON_METADATA=FALSE
 NODE_OPTIONS='-r epsagon-frameworks' node app.js
 ```
 

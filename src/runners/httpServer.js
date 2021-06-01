@@ -43,9 +43,9 @@ function createRunner(req, startTime) {
 
 /**
  * Terminates the running http-server (runner)
- * @param {Object} httpEvent runner's express event
+ * @param {Object} httpEvent runner's http-server event
  * @param {Response} res response data
- * @param {Request} req The Express's request data
+ * @param {Request} req The http-server's request data
  * @param {Int} startTime Runner start time
  * @param {string} module http/https
  * @param {Buffer} chunks request data buffer

@@ -26,7 +26,7 @@ const { shouldIgnore } = require('../http.js');
  * @param {string} module http/https
  * @param {Buffer} chunks request data buffer
  */
-function handleExpressRequestFinished(
+function handleHttpServerRequestFinished(
     req, tracerObj, httpEvent, startTime, resolve, parent, module, chunks
 ) {
     traceContext.setAsyncReference(tracerObj);
@@ -52,7 +52,7 @@ function handleExpressRequestFinished(
  * @param {string} module http/https
  * @returns {object} original return handler
  */
-function expressMiddleware(req, res, requestListener, module) {
+function httpServerMiddleware(req, res, requestListener, module) {
     // Check if endpoint is ignored
     traceContext.setMainReference();
     utils.debugLog('[http-server] - starting middleware');
@@ -82,7 +82,7 @@ function expressMiddleware(req, res, requestListener, module) {
             traceContext.setAsyncReference(tracerObj);
             utils.debugLog('[http-server] - creating response promise');
             res.once('finish', function handleResponse() {
-                handleExpressRequestFinished(
+                handleHttpServerRequestFinished(
                     req,
                     tracerObj,
                     httpEvent,
@@ -129,7 +129,7 @@ function httpServerWrapper(wrappedFunction, module) {
         const patchedListener =
             (req, res) => (traceContext.isTracingEnabled() ? traceContext.RunInContext(
                 tracer.createTracer,
-                () => expressMiddleware(req, res, requestListener, module)
+                () => httpServerMiddleware(req, res, requestListener, module)
             ) : requestListener);
         return wrappedFunction.apply(this, [options, patchedListener]);
     };

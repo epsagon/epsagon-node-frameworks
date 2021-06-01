@@ -199,6 +199,7 @@ The following frameworks are supported by Epsagon Frameworks.
 |[amqp](#amqp)                           |`>=0.2.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[bunnybus](#bunnybus)                   |`>=7.0.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[NATS](#nats)                           |`>=1.4.0`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
+|[HTTP Server](#http-server)             |All                        |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[WS (Websocket)](#ws)                   |`>=7.3.1`                  |`epsagon-frameworks`                               |<ul><li>- [x] </li></ul>                             |
 |[Generic](#generic)                     |All                        |`epsagon`                                          |<ul><li>- [ ] </li></ul>                             |
 
@@ -565,6 +566,33 @@ epsagon.init({
   token: 'epsagon-token',
   appName: 'app-name-stage',
   metadataOnly: false,
+});
+```
+
+### HTTP Server
+
+Tracing `nats` consumers can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `js` file where the consumer is being initialized:
+
+```javascript
+const epsagon = require('epsagon-frameworks');
+
+epsagon.init({
+  token: 'epsagon-token',
+  appName: 'app-name-stage',
+  metadataOnly: false,
+});
+```
+
+Tagging traces or setting custom errors can be by:
+
+```javascript
+const server = http.createServer((req, res) => {
+  epsagon.label('key', 'value');
+  epsagon.setError(Error('My custom error'));
 });
 ```
 

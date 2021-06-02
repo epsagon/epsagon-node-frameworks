@@ -42,6 +42,7 @@ This package provides tracing to Node.js applications for the collection of dist
     - [amqp](#amqp)
     - [bunnybus](#bunnybus)
     - [NATS](#nats)
+    - [HTTP Server](#http-server)
     - [WS (Websocket)](#ws-websocket)
     - [Generic](#generic)
   - [Integrations](#integrations)
@@ -571,7 +572,7 @@ epsagon.init({
 
 ### HTTP Server
 
-Tracing `nats` consumers can be done in two methods:
+Tracing HTTP Server application can be done in two methods:
 1. [Auto-tracing](#auto-tracing) using the environment variable.
 2. Calling the SDK.
 

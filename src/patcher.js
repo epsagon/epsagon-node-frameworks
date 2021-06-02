@@ -23,6 +23,7 @@ const mongodbPatcher = require('./events/mongodb.js');
 const wsPatcher = require('./wrappers/ws.js');
 const restifyPatcher = require('./wrappers/restify.js');
 const fastifyPatcher = require('./wrappers/fastify.js');
+const httpPatcher = require('./wrappers/http.js');
 
 
 const LIBNAME_TO_PATCHER = {
@@ -85,6 +86,7 @@ if (!config.getConfig().isEpsagonPatchDisabled) {
             fastifyPatcher,
             mysqlPatcher,
             mongodbPatcher,
+            httpPatcher,
         ].forEach(patch);
     } else {
         config.getConfig().patchWhitelist.forEach(

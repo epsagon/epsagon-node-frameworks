@@ -65,7 +65,9 @@ function finishRunner(httpEvent, res, req, startTime, module, chunks) {
         });
     }
 
-    httpHelpers.setJsonPayload(httpEvent, 'request_body', Buffer.concat(chunks));
+    if (chunks && chunks.length) {
+        httpHelpers.setJsonPayload(httpEvent, 'request_body', Buffer.concat(chunks));
+    }
 
     if (res.statusCode >= 500) {
         httpEvent.setErrorCode(errorCode.ErrorCode.EXCEPTION);

@@ -73,9 +73,11 @@ function httpServerMiddleware(req, res, requestListener, module) {
         httpEvent = httpServerRunner.createRunner(req, startTime);
         utils.debugLog('[http-server] - created runner');
 
-        req.on('data', (chunk) => {
-            httpHelpers.addChunk(chunk, chunks);
-        });
+        if ((process.env.EPSAGON_ENABLE_HTTP_BODY || '').toUpperCase() === 'TRUE') {
+            req.on('data', (chunk) => {
+                httpHelpers.addChunk(chunk, chunks);
+            });
+        }
 
         // Handle response
         const requestPromise = new Promise((resolve) => {

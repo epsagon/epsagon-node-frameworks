@@ -143,7 +143,10 @@ module.exports = {
      * Initializes the http-server tracer
      */
     init() {
-        shimmer.wrap(http, 'createServer', func => httpServerWrapper(func, 'http'));
-        shimmer.wrap(https, 'createServer', func => httpServerWrapper(func, 'https'));
+        // By default we don't trace http server since most web frameworks use it.
+        if ((process.env.EPSAGON_TRACE_HTTP_SERVER || '').toUpperCase() === 'TRUE') {
+            shimmer.wrap(http, 'createServer', func => httpServerWrapper(func, 'http'));
+            shimmer.wrap(https, 'createServer', func => httpServerWrapper(func, 'https'));
+        }
     },
 };

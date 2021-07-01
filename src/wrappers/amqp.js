@@ -29,7 +29,7 @@ function amqpSubscriberMiddleware(
     let nodeEvent;
     let nodeStartTime;
     try {
-        if (headers.bunnyBus) {
+        if (typeof headers === 'object' && headers.bunnyBus) {
             utils.debugLog('[amqp] Skipping BunnyBus messages');
             return originalCallback(message, headers, deliveryInfo, messageObject);
         }

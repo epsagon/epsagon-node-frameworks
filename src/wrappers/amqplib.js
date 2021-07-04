@@ -26,7 +26,11 @@ function amqplibSubscriberMiddleware(message, callback, channel) {
     let nodeStartTime;
     const tracerObj = tracer.getTrace();
     try {
-        if (message.properties.headers.bunnyBus) {
+        if (
+            message && message.properties &&
+            typeof message.properties.headers === 'object' &&
+            message.properties.headers.bunnyBus
+        ) {
             utils.debugLog('[amqplib] Skipping BunnyBus messages');
             return callback(message);
         }
@@ -142,7 +146,11 @@ function amqplibConsumerWrapper(wrappedFunction) {
         let patchedCallback = callback;
         if (typeof callback === 'function') {
             patchedCallback = (message) => {
-                if (message.properties.headers.bunnyBus) {
+                if (
+                    message && message.properties &&
+                    typeof message.properties.headers === 'object' &&
+                    message.properties.headers.bunnyBus
+                ) {
                     utils.debugLog('[amqplib] Skipping BunnyBus messages');
                     return callback(message);
                 }

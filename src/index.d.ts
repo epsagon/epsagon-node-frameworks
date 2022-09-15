@@ -36,4 +36,5 @@ declare module 'epsagon' {
   export function wrapBatchJob(): void
   export function enable(): void
   export function disable(): void
+  export function ignoreEndpoints(endpoints: string[]):void
 }

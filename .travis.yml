@@ -8,8 +8,8 @@ install:
   - npm install
 
 node_js:
-  - "12.13"
   - "14.15"
+  - "16"
 
 script:
   - npm run lint
@@ -18,7 +18,7 @@ script:
 jobs:
   include:
     - stage: build-and-deploy
-      node_js: "12.13"
+      node_js: "14.15"
       script:
         - npm run build && npm run semantic-release
 
